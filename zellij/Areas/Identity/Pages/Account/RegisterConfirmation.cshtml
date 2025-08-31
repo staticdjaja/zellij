@@ -1,0 +1,61 @@
+@page
+@model RegisterConfirmationModel
+@{
+    ViewData["Title"] = "Register confirmation";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h1 class="mb-0"><i class="fas fa-envelope me-2"></i>@ViewData["Title"]</h1>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-paper-plane fa-3x text-success mb-3"></i>
+                    <h4>Check Your Email</h4>
+                </div>
+                
+                <div class="alert alert-info" role="alert">
+                    <p class="mb-0">
+                        We've sent a confirmation email to <strong>@Model.Email</strong>
+                    </p>
+                </div>
+                
+                <p>Please check your email and click the confirmation link to activate your account.</p>
+                
+                <div class="bg-light p-3 rounded mb-4">
+                    <h6><i class="fas fa-info-circle me-2"></i>What to do next:</h6>
+                    <ol class="text-start mb-0">
+                        <li>Check your email inbox (and spam folder)</li>
+                        <li>Look for an email from CESARO</li>
+                        <li>Click the "Confirm Email Address" button in the email</li>
+                        <li>Return here to sign in</li>
+                    </ol>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Go to Sign In
+                    </a>
+                    <a asp-area="Identity" asp-page="/Account/ResendEmailConfirmation" class="btn btn-outline-warning">
+                        <i class="fas fa-redo me-2"></i>Resend Confirmation Email
+                    </a>
+                    <a asp-page="/Index" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i>Back to Homepage
+                    </a>
+                </div>
+
+                @if (Model.DisplayConfirmAccountLink)
+                {
+                    <div class="alert alert-warning mt-3" role="alert">
+                        <p>
+                            This email confirmation link is only for development purposes:
+                            <a id="confirm-link" href="@Model.EmailConfirmationUrl">Click here to confirm your account</a>
+                        </p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

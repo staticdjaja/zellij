@@ -1,0 +1,209 @@
+@page
+@model zellij.Pages.ContactModel
+@{
+    ViewData["Title"] = "Contact Us - CESARO";
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2 class="mb-0">
+                    <i class="fas fa-envelope me-2"></i>Contact Us
+                </h2>
+            </div>
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.ProductName))
+                {
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You're inquiring about: <strong>@Model.ProductName</strong>
+                    </div>
+                }
+
+                <form method="post">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Contact.Name" class="form-label"></label>
+                            <input asp-for="Contact.Name" class="form-control" />
+                            <span asp-validation-for="Contact.Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Contact.Email" class="form-label"></label>
+                            <input asp-for="Contact.Email" class="form-control" />
+                            <span asp-validation-for="Contact.Email" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Contact.Phone" class="form-label"></label>
+                            <input asp-for="Contact.Phone" class="form-control" />
+                            <span asp-validation-for="Contact.Phone" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Contact.Company" class="form-label"></label>
+                            <input asp-for="Contact.Company" class="form-control" />
+                            <span asp-validation-for="Contact.Company" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Contact.ProjectType" class="form-label"></label>
+                            <select asp-for="Contact.ProjectType" class="form-select">
+                                <option value="">Select Project Type</option>
+                                <option value="Residential - Kitchen">Residential - Kitchen</option>
+                                <option value="Residential - Bathroom">Residential - Bathroom</option>
+                                <option value="Residential - Flooring">Residential - Flooring</option>
+                                <option value="Commercial - Office">Commercial - Office</option>
+                                <option value="Commercial - Hotel">Commercial - Hotel</option>
+                                <option value="Commercial - Restaurant">Commercial - Restaurant</option>
+                                <option value="Exterior - Facade">Exterior - Facade</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Contact.ProjectSize" class="form-label"></label>
+                            <input asp-for="Contact.ProjectSize" class="form-control" type="number" min="1" />
+                            <span asp-validation-for="Contact.ProjectSize" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Contact.Subject" class="form-label"></label>
+                        <input asp-for="Contact.Subject" class="form-control" />
+                        <span asp-validation-for="Contact.Subject" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Contact.Message" class="form-label"></label>
+                        <textarea asp-for="Contact.Message" class="form-control" rows="5" 
+                                  placeholder="Please provide details about your project, timeline, and any specific requirements..."></textarea>
+                        <span asp-validation-for="Contact.Message" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane me-2"></i>Send Message
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Contact Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-map-marker-alt me-2"></i>Contact Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="fas fa-building me-2 text-primary"></i>Head Office</h6>
+                    <p class="text-muted mb-1">CESARO</p>
+                    <p class="text-muted mb-1">123 Marble District</p>
+                    <p class="text-muted">Casablanca 20000, Morocco</p>
+                </div>
+
+                <div class="mb-3">
+                    <h6><i class="fas fa-phone me-2 text-primary"></i>Phone</h6>
+                    <p class="text-muted">+212 522-XXX-XXX</p>
+                </div>
+
+                <div class="mb-3">
+                    <h6><i class="fas fa-envelope me-2 text-primary"></i>Email</h6>
+                    <p class="text-muted">info@zellijmarble.ma</p>
+                    <p class="text-muted">sales@zellijmarble.ma</p>
+                </div>
+
+                <div class="mb-3">
+                    <h6><i class="fas fa-clock me-2 text-primary"></i>Business Hours</h6>
+                    <p class="text-muted mb-1">Monday - Friday: 8:00 AM - 6:00 PM</p>
+                    <p class="text-muted mb-1">Saturday: 9:00 AM - 4:00 PM</p>
+                    <p class="text-muted">Sunday: Closed</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Quote -->
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calculator me-2"></i>Need a Quick Quote?
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    For immediate pricing information, call our sales team directly.
+                </p>
+                <div class="d-grid">
+                    <a href="tel:+212522XXXXXX" class="btn btn-success">
+                        <i class="fas fa-phone me-2"></i>Call Now
+                    </a>
+                </div>
+                <hr>
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-shield-alt me-1"></i>
+                        All quotes are free and no obligation
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Information -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-question-circle me-2"></i>Frequently Asked Questions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>How long does shipping take?</h6>
+                        <p class="text-muted small mb-3">
+                            Shipping typically takes 2-4 weeks depending on your location and order size.
+                        </p>
+
+                        <h6>Do you provide installation services?</h6>
+                        <p class="text-muted small mb-3">
+                            We work with certified installation partners worldwide and can recommend qualified installers in your area.
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Can I request custom sizes?</h6>
+                        <p class="text-muted small mb-3">
+                            Yes! We offer custom cutting and finishing services for most of our marble varieties.
+                        </p>
+
+                        <h6>What is your minimum order quantity?</h6>
+                        <p class="text-muted small mb-3">
+                            Minimum orders vary by product type. Contact us for specific requirements.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

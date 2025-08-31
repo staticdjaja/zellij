@@ -1,0 +1,97 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+<ul class="navbar-nav">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a class="nav-link text-light position-relative" asp-page="/Cart/Index">
+            <i class="fas fa-shopping-cart"></i>
+            <span id="cart-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.7em;">
+                0
+            </span>
+        </a>
+    </li>
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fas fa-user me-1"></i>@User.Identity?.Name!
+        </a>
+        <ul class="dropdown-menu" aria-labelledby="userDropdown">
+            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
+                <i class="fas fa-user-cog me-2"></i>Profile
+            </a></li>
+            
+            @if (User.IsInRole("Admin") || User.IsInRole("Seller"))
+            {
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Management</h6></li>
+                @if (User.IsInRole("Seller"))
+                {
+                    <li><a class="dropdown-item" asp-page="/Seller/Index">
+                        <i class="fas fa-tachometer-alt me-2"></i>Seller Dashboard
+                    </a></li>
+                    <li><a class="dropdown-item" asp-page="/Seller/Orders/Index">
+                        <i class="fas fa-clipboard-list me-2"></i>Manage Orders
+                    </a></li>
+                }
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><a class="dropdown-item" asp-page="/Admin/Index">
+                        <i class="fas fa-cogs me-2"></i>Admin Panel
+                    </a></li>
+                }
+                <li><hr class="dropdown-divider"></li>
+            }
+            
+            <li><a class="dropdown-item" asp-page="/Orders/Index">
+                <i class="fas fa-box me-2"></i>My Orders
+            </a></li>
+            <li><a class="dropdown-item" asp-page="/Account/Addresses/Index">
+                <i class="fas fa-map-marker-alt me-2"></i>My Addresses
+            </a></li>
+            <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication">
+                <i class="fas fa-shield-alt me-2"></i>Two-Factor Auth
+            </a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form class="dropdown-item p-0" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                    <button type="submit" class="btn btn-link text-dark text-decoration-none w-100 text-start">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="Identity" asp-page="/Account/Register">
+            <i class="fas fa-user-plus me-1"></i>Register
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link text-light" asp-area="Identity" asp-page="/Account/Login">
+            <i class="fas fa-sign-in-alt me-1"></i>Login
+        </a>
+    </li>
+}
+</ul>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <script>
+        // Load cart count on page load
+        fetch('/api/cart/count')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('cart-badge');
+                if (badge) {
+                    badge.textContent = data.count;
+                    badge.style.display = data.count > 0 ? 'block' : 'none';
+                }
+            })
+            .catch(error => console.log('Error loading cart count:', error));
+    </script>
+}

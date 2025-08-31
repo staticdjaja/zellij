@@ -1,0 +1,361 @@
+@page
+@model zellij.Pages.Seller.Orders.DetailsModel
+@using zellij.Models
+@{
+    ViewData["Title"] = $"Order #{Model.Order.OrderNumber} - Details";
+    var statusInfo = GetStatusInfo(Model.Order.Status);
+}
+
+<div class="row">
+    <div class="col-12">
+        <!-- Order Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1><i class="fas fa-receipt me-2"></i>Order #@Model.Order.OrderNumber</h1>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-calendar me-1"></i>
+                    Placed on @Model.Order.OrderDate.ToString("MMMM dd, yyyy 'at' h:mm tt")
+                </p>
+            </div>
+            <div class="text-end">
+                <span class="badge @statusInfo.BadgeClass fs-6">
+                    <i class="@statusInfo.Icon me-1"></i>@statusInfo.Text
+                </span><br>
+                <a asp-page="./Index" class="btn btn-outline-secondary mt-2">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Orders
+                </a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Customer Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user me-2"></i>Customer Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Contact Details</h6>
+                                <p class="mb-1"><strong>Name:</strong> @Model.Order.User.UserName</p>
+                                <p class="mb-1"><strong>Email:</strong> @Model.Order.User.Email</p>
+                                <p class="mb-0"><strong>User ID:</strong> <code>@Model.Order.User.Id</code></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Account Status</h6>
+                                <p class="mb-1">
+                                    <strong>Email Verified:</strong> 
+                                    @if (Model.Order.User.EmailConfirmed)
+                                    {
+                                        <span class="badge bg-success">Yes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">No</span>
+                                    }
+                                </p>
+                                <p class="mb-0">
+                                    <strong>2FA Enabled:</strong>
+                                    @if (Model.Order.User.TwoFactorEnabled)
+                                    {
+                                        <span class="badge bg-success">Yes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">No</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-box-open me-2"></i>Order Items (@Model.Order.OrderItems.Count)</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        @foreach (var item in Model.Order.OrderItems)
+                        {
+                            <div class="row border-bottom p-3 align-items-center">
+                                <div class="col-md-2">
+                                    @if (!string.IsNullOrEmpty(item.ProductImageUrl))
+                                    {
+                                        <img src="@item.ProductImageUrl" alt="@item.ProductName" class="img-fluid rounded">
+                                    }
+                                    else
+                                    {
+                                        <div class="bg-light text-center p-3 rounded">
+                                            <i class="fas fa-image text-muted"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-md-5">
+                                    <h6 class="mb-1">@item.ProductName</h6>
+                                    @if (!string.IsNullOrEmpty(item.ProductDescription))
+                                    {
+                                        <small class="text-muted">@item.ProductDescription</small>
+                                    }
+                                    <br><small class="text-muted">Product ID: @item.ProductId</small>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <span class="badge bg-light text-dark">Qty: @item.Quantity</span>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <strong>$@item.UnitPrice.ToString("F2")</strong><br>
+                                    <small class="text-muted">each</small>
+                                </div>
+                                <div class="col-md-1 text-end">
+                                    <strong>$@item.Total.ToString("F2")</strong>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Shipping Address</h5>
+                    </div>
+                    <div class="card-body">
+                        <address>
+                            <strong>@Model.Order.ShippingAddress.AddressName</strong><br>
+                            @Model.Order.ShippingAddress.StreetAddress<br>
+                            @if (!string.IsNullOrEmpty(Model.Order.ShippingAddress.AddressLine2))
+                            {
+                                @Model.Order.ShippingAddress.AddressLine2<br>
+                            }
+                            @Model.Order.ShippingAddress.City, @Model.Order.ShippingAddress.State @Model.Order.ShippingAddress.PostalCode<br>
+                            @Model.Order.ShippingAddress.Country
+                        </address>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Order.ShippingAddress.Phone))
+                        {
+                            <p class="mb-0">
+                                <i class="fas fa-phone me-2"></i>@Model.Order.ShippingAddress.Phone
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Model.Order.Notes))
+                {
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-sticky-note me-2"></i>Customer Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">@Model.Order.Notes</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Order Management -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Order Management</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" asp-page-handler="UpdateStatus" asp-route-id="@Model.Order.Id">
+                            <div class="mb-3">
+                                <label asp-for="NewStatus" class="form-label"><strong>Order Status</strong></label>
+                                <select asp-for="NewStatus" class="form-select">
+                                    <option value="@OrderStatus.Pending">Pending</option>
+                                    <option value="@OrderStatus.Confirmed">Confirmed</option>
+                                    <option value="@OrderStatus.Processing">Processing</option>
+                                    <option value="@OrderStatus.Shipped">Shipped</option>
+                                    <option value="@OrderStatus.Delivered">Delivered</option>
+                                    <option value="@OrderStatus.Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            
+                            @if (Model.Order.Status == OrderStatus.Processing || Model.Order.Status == OrderStatus.Shipped)
+                            {
+                                <div class="mb-3">
+                                    <label asp-for="TrackingNumber" class="form-label">Tracking Number</label>
+                                    <input asp-for="TrackingNumber" class="form-control" placeholder="Enter tracking number..." />
+                                </div>
+                            }
+                            
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-save me-1"></i>Update Status
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Order Summary</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>$@Model.Order.SubTotal.ToString("F2")</span>
+                        </div>
+                        
+                        @if (Model.Order.DiscountAmount > 0)
+                        {
+                            <div class="d-flex justify-content-between mb-2 text-success">
+                                <span>Discount @(Model.Order.Coupon != null ? $"({Model.Order.Coupon.Code})" : ""):</span>
+                                <span>-$@Model.Order.DiscountAmount.ToString("F2")</span>
+                            </div>
+                        }
+                        
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span>
+                                @if (Model.Order.ShippingCost == 0)
+                                {
+                                    <span class="text-success">FREE</span>
+                                }
+                                else
+                                {
+                                    <span>$@Model.Order.ShippingCost.ToString("F2")</span>
+                                }
+                            </span>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Tax:</span>
+                            <span>$@Model.Order.Tax.ToString("F2")</span>
+                        </div>
+                        
+                        <hr>
+                        
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong class="text-primary h5">$@Model.Order.Total.ToString("F2")</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Payment Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-hand-holding-usd fa-2x me-3"></i>
+                                <div>
+                                    <h6 class="mb-1">Cash on Delivery</h6>
+                                    <p class="mb-0">Customer pays $@Model.Order.Total.ToString("F2") when delivered</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Timeline -->
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-history me-2"></i>Order Timeline</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <i class="fas fa-shopping-cart text-success"></i>
+                                <div>
+                                    <strong>Order Placed</strong><br>
+                                    <small>@Model.Order.OrderDate.ToString("MMM dd, yyyy HH:mm")</small>
+                                </div>
+                            </div>
+                            
+                            @if (Model.Order.ShippedDate.HasValue)
+                            {
+                                <div class="timeline-item">
+                                    <i class="fas fa-truck text-warning"></i>
+                                    <div>
+                                        <strong>Shipped</strong><br>
+                                        <small>@Model.Order.ShippedDate.Value.ToString("MMM dd, yyyy HH:mm")</small>
+                                        @if (!string.IsNullOrEmpty(Model.Order.TrackingNumber))
+                                        {
+                                            <br><small>Tracking: @Model.Order.TrackingNumber</small>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                            
+                            @if (Model.Order.DeliveredDate.HasValue)
+                            {
+                                <div class="timeline-item">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                    <div>
+                                        <strong>Delivered</strong><br>
+                                        <small>@Model.Order.DeliveredDate.Value.ToString("MMM dd, yyyy HH:mm")</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private (string BadgeClass, string Icon, string Text) GetStatusInfo(OrderStatus status)
+    {
+        return status switch
+        {
+            OrderStatus.Pending => ("bg-warning text-dark", "fas fa-clock", "Pending"),
+            OrderStatus.Confirmed => ("bg-info", "fas fa-check", "Confirmed"),
+            OrderStatus.Processing => ("bg-primary", "fas fa-cog", "Processing"),
+            OrderStatus.Shipped => ("bg-warning", "fas fa-truck", "Shipped"),
+            OrderStatus.Delivered => ("bg-success", "fas fa-check-circle", "Delivered"),
+            OrderStatus.Cancelled => ("bg-danger", "fas fa-times", "Cancelled"),
+            OrderStatus.Refunded => ("bg-secondary", "fas fa-undo", "Refunded"),
+            _ => ("bg-secondary", "fas fa-question", "Unknown")
+        };
+    }
+}
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-left: 30px;
+}
+
+.timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.timeline-item i {
+    position: absolute;
+    left: -24px;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+}
+</style>

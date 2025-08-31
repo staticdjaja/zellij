@@ -1,0 +1,169 @@
+@page
+@model zellij.Pages.Admin.Products.EditModel
+@{
+    ViewData["Title"] = "Edit Product";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-edit me-2"></i>Edit Product</h1>
+    <a asp-page="./Index" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i>Back to Products
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-edit me-2"></i>Product Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Product.Id" />
+                    <input type="hidden" asp-for="Product.CreatedDate" />
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.Name" class="form-label"></label>
+                            <input asp-for="Product.Name" class="form-control" />
+                            <span asp-validation-for="Product.Name" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.MarbleType" class="form-label"></label>
+                            <select asp-for="Product.MarbleType" class="form-select">
+                                <option value="">Select Type</option>
+                                <option value="Carrara">Carrara</option>
+                                <option value="Verde">Verde</option>
+                                <option value="Noir">Noir</option>
+                                <option value="Rose">Rose</option>
+                                <option value="Beige">Beige</option>
+                                <option value="Travertine">Travertine</option>
+                            </select>
+                            <span asp-validation-for="Product.MarbleType" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.Origin" class="form-label"></label>
+                            <select asp-for="Product.Origin" class="form-select">
+                                <option value="">Select Origin</option>
+                                <option value="Atlas Mountains">Atlas Mountains</option>
+                                <option value="Rif Mountains">Rif Mountains</option>
+                                <option value="Sahara">Sahara</option>
+                                <option value="Fez">Fez</option>
+                                <option value="Meknes">Meknes</option>
+                                <option value="Agadir">Agadir</option>
+                                <option value="Casablanca">Casablanca</option>
+                            </select>
+                            <span asp-validation-for="Product.Origin" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.Color" class="form-label"></label>
+                            <input asp-for="Product.Color" class="form-control" placeholder="e.g., White, Green, Black" />
+                            <span asp-validation-for="Product.Color" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Product.Description" class="form-label"></label>
+                        <textarea asp-for="Product.Description" class="form-control" rows="4" placeholder="Describe the marble's characteristics, patterns, and best uses..."></textarea>
+                        <span asp-validation-for="Product.Description" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Product.Price" class="form-label"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input asp-for="Product.Price" class="form-control" step="0.01" />
+                            </div>
+                            <span asp-validation-for="Product.Price" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Product.Dimensions" class="form-label"></label>
+                            <input asp-for="Product.Dimensions" class="form-control" placeholder="e.g., 12x12, 24x24" />
+                            <span asp-validation-for="Product.Dimensions" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="Product.Finish" class="form-label"></label>
+                            <select asp-for="Product.Finish" class="form-select">
+                                <option value="">Select Finish</option>
+                                <option value="Polished">Polished</option>
+                                <option value="Honed">Honed</option>
+                                <option value="Tumbled">Tumbled</option>
+                                <option value="Brushed">Brushed</option>
+                                <option value="Sandblasted">Sandblasted</option>
+                            </select>
+                            <span asp-validation-for="Product.Finish" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.StockQuantity" class="form-label"></label>
+                            <input asp-for="Product.StockQuantity" class="form-control" />
+                            <span asp-validation-for="Product.StockQuantity" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Product.ImageUrl" class="form-label"></label>
+                            <input asp-for="Product.ImageUrl" class="form-control" placeholder="https://example.com/image.jpg" />
+                            <span asp-validation-for="Product.ImageUrl" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input asp-for="Product.InStock" class="form-check-input" />
+                            <label asp-for="Product.InStock" class="form-check-label">
+                                Product is in stock
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Update Product
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle me-2"></i>Product Info</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Created:</strong> @Model.Product.CreatedDate.ToString("MMM dd, yyyy")</p>
+                @if (Model.Product.ModifiedDate.HasValue)
+                {
+                    <p><strong>Last Modified:</strong> @Model.Product.ModifiedDate.Value.ToString("MMM dd, yyyy")</p>
+                }
+                <p><strong>Product ID:</strong> #@Model.Product.Id</p>
+            </div>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+        {
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6><i class="fas fa-image me-2"></i>Current Image</h6>
+                </div>
+                <div class="card-body text-center">
+                    <img src="@Model.Product.ImageUrl" alt="@Model.Product.Name" class="img-fluid rounded" style="max-height: 200px;" />
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

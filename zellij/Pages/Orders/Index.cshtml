@@ -1,0 +1,190 @@
+@page
+@model zellij.Pages.Orders.IndexModel
+@using zellij.Extensions
+@using zellij.Models
+@{
+    ViewData["Title"] = "My Orders";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-box me-2"></i>My Orders</h1>
+            <a asp-page="/Products/Index" class="btn btn-primary">
+                <i class="fas fa-shopping-bag me-1"></i>Continue Shopping
+            </a>
+        </div>
+
+        @if (Model.Orders.Any())
+        {
+            @foreach (var order in Model.Orders)
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-receipt me-2"></i>Order #@order.OrderNumber
+                                </h6>
+                            </div>
+                            <div class="col-md-2">
+                                @{
+                                    var statusInfo = GetStatusInfo(order.Status);
+                                }
+                                <span class="badge @statusInfo.BadgeClass">
+                                    <i class="@statusInfo.Icon me-1"></i>@statusInfo.Text
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Ordered: @order.OrderDate.ToString("MMM dd, yyyy")
+                                </small>
+                            </div>
+                            <div class="col-md-2">
+                                <strong class="text-primary">$@order.Total.ToString("F2")</strong>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <a asp-page="./Details" asp-route-id="@order.Id" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-box-open me-2"></i>Items (@order.OrderItems.Count)</h6>
+                                <div class="mb-2">
+                                    @foreach (var item in order.OrderItems.Take(3))
+                                    {
+                                        <span class="badge bg-light text-dark me-1 mb-1">@item.ProductName × @item.Quantity</span>
+                                    }
+                                    @if (order.OrderItems.Count > 3)
+                                    {
+                                        <span class="text-muted">+@(order.OrderItems.Count - 3) more</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="fas fa-map-marker-alt me-2"></i>Delivery Address</h6>
+                                <address class="text-muted small mb-0">
+                                    @order.ShippingAddress.StreetAddress<br>
+                                    @order.ShippingAddress.City, @order.ShippingAddress.State
+                                </address>
+                                
+                                @if (order.Status == Models.OrderStatus.Pending || order.Status == Models.OrderStatus.Confirmed)
+                                {
+                                    <div class="mt-2">
+                                        <small class="text-info">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Estimated delivery: @GetEstimatedDelivery(order.OrderDate)
+                                        </small>
+                                    </div>
+                                }
+                                else if (order.Status == Models.OrderStatus.Shipped && order.ShippedDate.HasValue)
+                                {
+                                    <div class="mt-2">
+                                        <small class="text-warning">
+                                            <i class="fas fa-truck me-1"></i>
+                                            Shipped: @order.ShippedDate.Value.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                }
+                                else if (order.Status == Models.OrderStatus.Delivered && order.DeliveredDate.HasValue)
+                                {
+                                    <div class="mt-2">
+                                        <small class="text-success">
+                                            <i class="fas fa-check-circle me-1"></i>
+                                            Delivered: @order.DeliveredDate.Value.ToString("MMM dd, yyyy")
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        
+                        @if (order.Status == Models.OrderStatus.Pending)
+                        {
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="alert alert-info mb-0 py-2">
+                                            <i class="fas fa-money-bill-wave me-2"></i>
+                                            <strong>Cash on Delivery:</strong> Pay $@order.Total.ToString("F2") when delivered
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        <button class="btn btn-outline-danger btn-sm" onclick="cancelOrder(@order.Id)">
+                                            <i class="fas fa-times me-1"></i>Cancel Order
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No orders found</h3>
+                <p class="text-muted">You haven't placed any orders yet. Start shopping to see your orders here!</p>
+                <a asp-page="/Products/Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-gem me-2"></i>Shop Marble Collection
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    private (string BadgeClass, string Icon, string Text) GetStatusInfo(Models.OrderStatus status)
+    {
+        return status switch
+        {
+            Models.OrderStatus.Pending => ("bg-warning text-dark", "fas fa-clock", "Pending"),
+            Models.OrderStatus.Confirmed => ("bg-info", "fas fa-check", "Confirmed"),
+            Models.OrderStatus.Processing => ("bg-primary", "fas fa-cog", "Processing"),
+            Models.OrderStatus.Shipped => ("bg-warning", "fas fa-truck", "Shipped"),
+            Models.OrderStatus.Delivered => ("bg-success", "fas fa-check-circle", "Delivered"),
+            Models.OrderStatus.Cancelled => ("bg-danger", "fas fa-times", "Cancelled"),
+            Models.OrderStatus.Refunded => ("bg-secondary", "fas fa-undo", "Refunded"),
+            _ => ("bg-secondary", "fas fa-question", "Unknown")
+        };
+    }
+    
+    private string GetEstimatedDelivery(DateTime orderDate)
+    {
+        var estimated = orderDate.AddBusinessDays(3, 7); // 3-7 business days
+        return estimated.ToString("MMM dd, yyyy");
+    }
+}
+
+@section Scripts {
+    <script>
+        function cancelOrder(orderId) {
+            if (confirm('Are you sure you want to cancel this order?')) {
+                fetch(`/api/orders/${orderId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Unable to cancel order. Please contact customer service.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            }
+        }
+    </script>
+}

@@ -1,0 +1,188 @@
+@page
+@model zellij.Pages.Admin.Products.DetailsModel
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-eye me-2"></i>Product Details</h1>
+    <div>
+        <a asp-page="./Index" class="btn btn-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i>Back to Products
+        </a>
+        <a asp-page="./Edit" asp-route-id="@Model.Product.Id" class="btn btn-primary me-2">
+            <i class="fas fa-edit me-1"></i>Edit
+        </a>
+        <a asp-page="./Delete" asp-route-id="@Model.Product.Id" class="btn btn-danger">
+            <i class="fas fa-trash me-1"></i>Delete
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle me-2"></i>@Model.Product.Name</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Name:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.Name)</dd>
+                    
+                    <dt class="col-sm-3">Type:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge bg-secondary">@Html.DisplayFor(model => model.Product.MarbleType)</span>
+                    </dd>
+                    
+                    <dt class="col-sm-3">Origin:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.Origin)</dd>
+                    
+                    <dt class="col-sm-3">Color:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.Color)</dd>
+                    
+                    <dt class="col-sm-3">Description:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.Description)</dd>
+                    
+                    <dt class="col-sm-3">Price:</dt>
+                    <dd class="col-sm-9">
+                        <strong class="text-success">$@Html.DisplayFor(model => model.Product.Price)</strong>
+                    </dd>
+                    
+                    <dt class="col-sm-3">Dimensions:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.Dimensions)</dd>
+                    
+                    <dt class="col-sm-3">Finish:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.Finish)</dd>
+                    
+                    <dt class="col-sm-3">Stock Quantity:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge @(Model.Product.StockQuantity > 10 ? "bg-success" : Model.Product.StockQuantity > 0 ? "bg-warning" : "bg-danger")">
+                            @Html.DisplayFor(model => model.Product.StockQuantity) units
+                        </span>
+                    </dd>
+                    
+                    <dt class="col-sm-3">In Stock:</dt>
+                    <dd class="col-sm-9">
+                        @if (Model.Product.InStock && Model.Product.StockQuantity > 0)
+                        {
+                            <span class="badge bg-success"><i class="fas fa-check me-1"></i>Available</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Out of Stock</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-3">Image URL:</dt>
+                    <dd class="col-sm-9">
+                        @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+                        {
+                            <a href="@Model.Product.ImageUrl" target="_blank" class="text-decoration-none">
+                                @Model.Product.ImageUrl <i class="fas fa-external-link-alt ms-1"></i>
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No image</span>
+                        }
+                    </dd>
+                    
+                    <dt class="col-sm-3">Created:</dt>
+                    <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.CreatedDate)</dd>
+                    
+                    @if (Model.Product.ModifiedDate.HasValue)
+                    {
+                        <dt class="col-sm-3">Last Modified:</dt>
+                        <dd class="col-sm-9">@Html.DisplayFor(model => model.Product.ModifiedDate)</dd>
+                    }
+                </dl>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-bar me-2"></i>Quick Actions</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <a asp-page="/Products/Details" asp-route-id="@Model.Product.Id" class="btn btn-outline-primary w-100" target="_blank">
+                            <i class="fas fa-external-link-alt me-1"></i>View Public Page
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <button class="btn btn-outline-success w-100" onclick="copyProductLink()">
+                            <i class="fas fa-copy me-1"></i>Copy Link
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <a asp-page="./Edit" asp-route-id="@Model.Product.Id" class="btn btn-outline-warning w-100">
+                            <i class="fas fa-edit me-1"></i>Quick Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-image me-2"></i>Product Image</h6>
+                </div>
+                <div class="card-body text-center">
+                    <img src="@Model.Product.ImageUrl" alt="@Model.Product.Name" class="img-fluid rounded" style="max-height: 300px;" />
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h6><i class="fas fa-image me-2"></i>Product Image</h6>
+                </div>
+                <div class="card-body text-center">
+                    <div class="product-image-placeholder rounded">
+                        <i class="fas fa-image fa-3x text-muted"></i>
+                        <p class="text-muted mt-2 mb-0">No image available</p>
+                    </div>
+                </div>
+            </div>
+        }
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-cog me-2"></i>Management</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a asp-page="./Edit" asp-route-id="@Model.Product.Id" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i>Edit Product
+                    </a>
+                    <a asp-page="./Delete" asp-route-id="@Model.Product.Id" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Product
+                    </a>
+                    <a asp-page="./Create" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i>Add Similar Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyProductLink() {
+            const productUrl = window.location.protocol + "//" + window.location.host + "/Products/Details/@Model.Product.Id";
+            navigator.clipboard.writeText(productUrl).then(function() {
+                alert('Product link copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+}

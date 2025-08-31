@@ -1,0 +1,206 @@
+@page
+@model zellij.Pages.Products.DetailsModel
+@{
+    ViewData["Title"] = $"{Model.Product.Name} - Product Details";
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="/Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-page="./Index">Products</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Product.Name</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Product Image -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                @if (!string.IsNullOrEmpty(Model.Product.ImageUrl))
+                {
+                    <img src="@Model.Product.ImageUrl" alt="@Model.Product.Name" class="img-fluid rounded" 
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                }
+                <div class="text-center py-5 bg-light rounded" style="display: @(string.IsNullOrEmpty(Model.Product.ImageUrl) ? "block" : "none");">
+                    <i class="fas fa-image fa-4x text-muted mb-3"></i>
+                    <h4 class="text-muted">@Model.Product.Name</h4>
+                    <p class="text-muted">Premium Moroccan Marble</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-body">
+                <h1 class="card-title h2 mb-3">@Model.Product.Name</h1>
+                
+                <div class="mb-4">
+                    <h3 class="text-primary">$@Model.Product.Price.ToString("F2")</h3>
+                    <p class="text-muted">per square foot</p>
+                </div>
+
+                <p class="card-text mb-4">@Model.Product.Description</p>
+
+                <!-- Product Specifications -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5 class="mb-3"><i class="fas fa-info-circle me-2"></i>Specifications</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <tbody>
+                                    <tr>
+                                        <td><strong><i class="fas fa-gem me-2"></i>Marble Type:</strong></td>
+                                        <td>@Model.Product.MarbleType</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-map-marker-alt me-2"></i>Origin:</strong></td>
+                                        <td>@Model.Product.Origin, Morocco</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-palette me-2"></i>Color:</strong></td>
+                                        <td>@Model.Product.Color</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-polish me-2"></i>Finish:</strong></td>
+                                        <td>@Model.Product.Finish</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-ruler me-2"></i>Dimensions:</strong></td>
+                                        <td>@Model.Product.Dimensions inches</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong><i class="fas fa-boxes me-2"></i>Stock:</strong></td>
+                                        <td>
+                                            @if (Model.Product.StockQuantity > 0)
+                                            {
+                                                <span class="badge bg-success">@Model.Product.StockQuantity units available</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger">Out of Stock</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add to Cart Section -->
+                @if (Model.Product.StockQuantity > 0)
+                {
+                    <div class="border rounded p-3 mb-4 bg-light">
+                        <form method="post" asp-page-handler="AddToCart" asp-route-id="@Model.Product.Id">
+                            <div class="row align-items-end">
+                                <div class="col-md-4">
+                                    <label asp-for="Quantity" class="form-label"><strong>Quantity:</strong></label>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity()">-</button>
+                                        <input asp-for="Quantity" class="form-control text-center" min="1" max="@Model.Product.StockQuantity" />
+                                        <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(@Model.Product.StockQuantity)">+</button>
+                                    </div>
+                                    <span asp-validation-for="Quantity" class="text-danger"></span>
+                                </div>
+                                <div class="col-md-8">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                                        <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                }
+
+                <!-- Action Buttons -->
+                <div class="d-grid gap-2">
+                    @if (Model.Product.StockQuantity > 0)
+                    {
+                        <button type="button" class="btn btn-outline-primary" onclick="contactForInfo()">
+                            <i class="fas fa-phone me-2"></i>Contact for Custom Order
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-secondary btn-lg" disabled>
+                            <i class="fas fa-times me-2"></i>Currently Out of Stock
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="notifyWhenAvailable()">
+                            <i class="fas fa-bell me-2"></i>Notify When Available
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Information -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info me-2"></i>Care & Maintenance</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-shield-alt me-2 text-primary"></i>Sealing</h6>
+                        <p class="text-muted small">Seal marble surfaces annually to protect against stains and moisture.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-tint me-2 text-primary"></i>Cleaning</h6>
+                        <p class="text-muted small">Use pH-neutral cleaners specifically designed for natural stone.</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h6><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Avoid</h6>
+                        <p class="text-muted small">Never use acidic cleaners like vinegar or lemon juice on marble.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Related Products -->
+<div class="mt-5">
+    <h4 class="mb-4"><i class="fas fa-layer-group me-2"></i>You Might Also Like</h4>
+    <div class="text-center">
+        <a asp-page="./Index" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-2"></i>Browse All Products
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function incrementQuantity(maxQuantity) {
+            const input = document.querySelector('input[name="Quantity"]');
+            const currentValue = parseInt(input.value);
+            if (currentValue < maxQuantity) {
+                input.value = currentValue + 1;
+            }
+        }
+
+        function decrementQuantity() {
+            const input = document.querySelector('input[name="Quantity"]');
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+
+        function contactForInfo() {
+            // Redirect to contact page with product info
+            window.location.href = '/Contact?product=' + encodeURIComponent('@Model.Product.Name');
+        }
+
+        function notifyWhenAvailable() {
+            alert('You will be notified when this product becomes available! (This would be implemented with proper notification system)');
+        }
+    </script>
+}

@@ -1,0 +1,201 @@
+@page
+@model zellij.Pages.Cart.IndexModel
+@{
+    ViewData["Title"] = "Shopping Cart";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1><i class="fas fa-shopping-cart me-2"></i>Your Shopping Cart</h1>
+        
+        @if (Model.CartSummary.Items.Any())
+        {
+            <div class="row">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Cart Items (@Model.CartSummary.TotalItems items)</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            @foreach (var item in Model.CartSummary.Items)
+                            {
+                                <div class="row border-bottom p-3 align-items-center">
+                                    <div class="col-md-2">
+                                        @if (!string.IsNullOrEmpty(item.Product.ImageUrl))
+                                        {
+                                            <img src="@item.Product.ImageUrl" alt="@item.Product.Name" class="img-fluid rounded">
+                                        }
+                                        else
+                                        {
+                                            <div class="bg-light text-center p-3 rounded">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h6 class="mb-1">@item.Product.Name</h6>
+                                        <small class="text-muted">@item.Product.MarbleType - @item.Product.Origin</small><br>
+                                        <small class="text-muted">@item.Product.Dimensions - @item.Product.Finish</small>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        <strong>$@item.PriceAtTimeOfAdd.ToString("F2")</strong>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <form method="post" asp-page-handler="UpdateQuantity" class="d-inline">
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <div class="input-group input-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="decrementQuantity(@item.ProductId)">-</button>
+                                                <input type="number" name="quantity" id="quantity-@item.ProductId" value="@item.Quantity" min="1" max="@item.Product.StockQuantity" class="form-control text-center" style="width: 70px;">
+                                                <button type="button" class="btn btn-outline-secondary" onclick="incrementQuantity(@item.ProductId, @item.Product.StockQuantity)">+</button>
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-primary mt-1 w-100">Update</button>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <div class="mb-2">
+                                            <strong>$@item.Total.ToString("F2")</strong>
+                                        </div>
+                                        <form method="post" asp-page-handler="RemoveItem" class="d-inline">
+                                            <input type="hidden" name="productId" value="@item.ProductId" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Remove this item from cart?')">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer">
+                            <div class="row">
+                                <div class="col-6">
+                                    <form method="post" asp-page-handler="ClearCart" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Clear entire cart?')">
+                                            <i class="fas fa-trash me-1"></i>Clear Cart
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="col-6 text-end">
+                                    <a asp-page="/Products/Index" class="btn btn-outline-primary">
+                                        <i class="fas fa-arrow-left me-1"></i>Continue Shopping
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-4">
+                    <!-- Coupon Section -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-ticket-alt me-2"></i>Coupon Code</h6>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" asp-page-handler="ApplyCoupon">
+                                <div class="input-group">
+                                    <input asp-for="CouponCode" class="form-control" placeholder="Enter coupon code" />
+                                    <button type="submit" class="btn btn-success">Apply</button>
+                                </div>
+                                <small class="text-muted">Enter your coupon code to get a discount</small>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Order Summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-calculator me-2"></i>Order Summary</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <span>$@Model.CartSummary.SubTotal.ToString("F2")</span>
+                            </div>
+                            
+                            @if (Model.CartSummary.DiscountAmount > 0)
+                            {
+                                <div class="d-flex justify-content-between mb-2 text-success">
+                                    <span>Discount:</span>
+                                    <span>-$@Model.CartSummary.DiscountAmount.ToString("F2")</span>
+                                </div>
+                            }
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Shipping:</span>
+                                <span>
+                                    @if (Model.CartSummary.ShippingCost == 0)
+                                    {
+                                        <span class="text-success">FREE</span>
+                                    }
+                                    else
+                                    {
+                                        <span>$@Model.CartSummary.ShippingCost.ToString("F2")</span>
+                                    }
+                                </span>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Tax:</span>
+                                <span>$@Model.CartSummary.Tax.ToString("F2")</span>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="d-flex justify-content-between mb-3">
+                                <strong>Total:</strong>
+                                <strong class="text-primary">$@Model.CartSummary.Total.ToString("F2")</strong>
+                            </div>
+                            
+                            @if (Model.CartSummary.SubTotal < 500)
+                            {
+                                <div class="alert alert-info">
+                                    <small>
+                                        <i class="fas fa-truck me-1"></i>
+                                        Add $@((500 - Model.CartSummary.SubTotal).ToString("F2")) more for FREE shipping!
+                                    </small>
+                                </div>
+                            }
+                            
+                            <div class="d-grid">
+                                <a asp-page="/Checkout/Index" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-credit-card me-2"></i>Proceed to Checkout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">Your cart is empty</h3>
+                <p class="text-muted">Add some beautiful Moroccan marble to your cart!</p>
+                <a asp-page="/Products/Index" class="btn btn-primary btn-lg">
+                    <i class="fas fa-gem me-2"></i>Shop Marble Collection
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function incrementQuantity(productId, maxQuantity) {
+            const input = document.getElementById('quantity-' + productId);
+            const currentValue = parseInt(input.value);
+            if (currentValue < maxQuantity) {
+                input.value = currentValue + 1;
+            }
+        }
+
+        function decrementQuantity(productId) {
+            const input = document.getElementById('quantity-' + productId);
+            const currentValue = parseInt(input.value);
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+    </script>
+}

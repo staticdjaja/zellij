@@ -1,0 +1,60 @@
+@page
+@model ConfirmEmailModel
+@{
+    ViewData["Title"] = "Confirm email";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h1 class="mb-0"><i class="fas fa-envelope-check me-2"></i>@ViewData["Title"]</h1>
+            </div>
+            <div class="card-body text-center">
+                @if (Model.StatusMessage.Contains("Thank you"))
+                {
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h4 class="text-success">Email Confirmed!</h4>
+                    </div>
+                    <div class="alert alert-success" role="alert">
+                        @Model.StatusMessage
+                    </div>
+                    <p>Your email has been successfully confirmed. You can now:</p>
+                    <div class="d-grid gap-2">
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                        </a>
+                        <a asp-page="/Index" class="btn btn-outline-primary">
+                            <i class="fas fa-home me-2"></i>Go to Homepage
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+                        <h4 class="text-danger">Confirmation Failed</h4>
+                    </div>
+                    <div class="alert alert-danger" role="alert">
+                        @Model.StatusMessage
+                    </div>
+                    <p>There was an issue confirming your email. This could be because:</p>
+                    <ul class="text-start">
+                        <li>The confirmation link has expired</li>
+                        <li>The link has already been used</li>
+                        <li>The link is invalid or corrupted</li>
+                    </ul>
+                    <div class="d-grid gap-2">
+                        <a asp-area="Identity" asp-page="/Account/ResendEmailConfirmation" class="btn btn-warning">
+                            <i class="fas fa-redo me-2"></i>Resend Confirmation Email
+                        </a>
+                        <a asp-page="/Contact" class="btn btn-outline-primary">
+                            <i class="fas fa-envelope me-2"></i>Contact Support
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

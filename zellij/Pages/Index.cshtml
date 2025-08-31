@@ -1,0 +1,132 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home - Premium Moroccan Marble";
+}
+
+<!-- Hero Section -->
+<div class="hero-section bg-primary text-white py-5 rounded mb-5">
+    <div class="container text-center">
+        <h1 class="display-3 mb-4">
+            <i class="fas fa-gem me-3"></i>Premium Moroccan Marble
+        </h1>
+        <p class="lead mb-4">
+            Discover the finest collection of authentic Moroccan marble from the Atlas Mountains, 
+            Rif Mountains, and Sahara regions. Perfect for luxury interiors, countertops, and architectural projects.
+        </p>
+        <a asp-page="/Products/Index" class="btn btn-light btn-lg">
+            <i class="fas fa-eye me-2"></i>Explore Our Collection
+        </a>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-md-4 text-center mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-mountain fa-3x text-primary mb-3"></i>
+                <h4>Authentic Origins</h4>
+                <p class="card-text">
+                    Sourced directly from Morocco's most prestigious quarries in the Atlas Mountains, 
+                    Rif Mountains, and Sahara regions.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-award fa-3x text-primary mb-3"></i>
+                <h4>Premium Quality</h4>
+                <p class="card-text">
+                    Each piece is carefully selected and inspected to ensure the highest quality 
+                    standards for your luxury projects.
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 text-center mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <i class="fas fa-palette fa-3x text-primary mb-3"></i>
+                <h4>Variety of Finishes</h4>
+                <p class="card-text">
+                    Available in multiple finishes including polished, honed, and tumbled 
+                    to suit your design preferences.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Products Preview -->
+<div class="mb-5">
+    <h2 class="text-center mb-4">Featured Marble Types</h2>
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-circle text-light fa-2x mb-2" style="color: #f8f9fa !important;"></i>
+                    <h5>Carrara White</h5>
+                    <p class="text-muted">Classic white marble with elegant veining</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-circle text-success fa-2x mb-2"></i>
+                    <h5>Verde Atlas</h5>
+                    <p class="text-muted">Stunning green marble with natural patterns</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-circle text-dark fa-2x mb-2"></i>
+                    <h5>Noir Sahara</h5>
+                    <p class="text-muted">Dramatic black marble with gold veining</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="fas fa-circle fa-2x mb-2" style="color: #ffc0cb;"></i>
+                    <h5>Rose Atlas</h5>
+                    <p class="text-muted">Elegant pink marble with soft patterns</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="text-center bg-light py-5 rounded">
+    <h3 class="mb-3">Ready to Transform Your Space?</h3>
+    <p class="mb-4">Contact us today for a personalized consultation and quote for your project.</p>
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+        <a asp-page="/Products/Index" class="btn btn-primary btn-lg me-md-2">
+            <i class="fas fa-box me-2"></i>Browse Products
+        </a>
+        <a asp-page="/Contact" class="btn btn-outline-primary btn-lg">
+            <i class="fas fa-phone me-2"></i>Get Quote
+        </a>
+    </div>
+</div>
+
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.card {
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>

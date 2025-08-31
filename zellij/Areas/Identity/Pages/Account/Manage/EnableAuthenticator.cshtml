@@ -1,0 +1,121 @@
+@page
+@model EnableAuthenticatorModel
+@{
+    ViewData["Title"] = "Configure authenticator app";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="row">
+    <div class="col-md-8">
+        <h3><i class="fas fa-shield-alt me-2 text-primary"></i>@ViewData["Title"]</h3>
+        
+        <div class="two-factor-step">
+            <h4><span class="step-number">1</span>Download an Authenticator App</h4>
+            <p>
+                Download a two-factor authenticator app like:
+            </p>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Microsoft Authenticator:</strong><br>
+                    <a href="https://go.microsoft.com/fwlink/?Linkid=825072" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fab fa-android me-1"></i>Android
+                    </a>
+                    <a href="https://go.microsoft.com/fwlink/?Linkid=825073" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fab fa-apple me-1"></i>iOS
+                    </a>
+                </div>
+                <div class="col-md-6">
+                    <strong>Google Authenticator:</strong><br>
+                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en" target="_blank" class="btn btn-outline-success btn-sm me-2">
+                        <i class="fab fa-android me-1"></i>Android
+                    </a>
+                    <a href="https://itunes.apple.com/us/app/google-authenticator/id388497605?mt=8" target="_blank" class="btn btn-outline-success btn-sm">
+                        <i class="fab fa-apple me-1"></i>iOS
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="two-factor-step">
+            <h4><span class="step-number">2</span>Scan QR Code or Enter Setup Key</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="qr-code-container">
+                        <h6><i class="fas fa-qrcode me-2"></i>QR Code</h6>
+                        <img src="@Model.QrCodeData" alt="QR Code for setting up authenticator" class="img-fluid" style="max-width: 200px;" />
+                        <p class="text-muted mt-2 mb-0">Scan this with your authenticator app</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6><i class="fas fa-key me-2"></i>Manual Setup Key</h6>
+                    <p class="text-muted">If you can't scan the QR code, enter this key manually:</p>
+                    <div class="shared-key">
+                        @Model.SharedKey
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Spaces and casing do not matter
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="two-factor-step">
+            <h4><span class="step-number">3</span>Verify Setup</h4>
+            <p>
+                Once you have scanned the QR code or entered the key, your authenticator app will provide you
+                with a unique code. Enter the code below to complete the setup.
+            </p>
+            <form id="send-code" method="post">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-floating mb-3">
+                            <input asp-for="Input.Code" class="form-control form-control-lg text-center" autocomplete="off" placeholder="000000" style="font-family: monospace; font-size: 1.5em; letter-spacing: 0.2em;" />
+                            <label asp-for="Input.Code" class="form-label"></label>
+                            <span asp-validation-for="Input.Code" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-check me-2"></i>Verify and Enable 2FA
+                        </button>
+                        <div asp-validation-summary="ModelOnly" class="text-danger mt-2" role="alert"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Why Enable 2FA?</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-shield-alt text-success me-2"></i>Enhanced security</li>
+                    <li class="mb-2"><i class="fas fa-lock text-success me-2"></i>Protect against password theft</li>
+                    <li class="mb-2"><i class="fas fa-mobile-alt text-success me-2"></i>Works offline</li>
+                    <li class="mb-2"><i class="fas fa-key text-success me-2"></i>Industry standard</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card border-warning mt-3">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-save text-warning me-2"></i>Save your recovery codes</li>
+                    <li class="mb-2"><i class="fas fa-backup text-warning me-2"></i>Keep backup of your setup key</li>
+                    <li class="mb-2"><i class="fas fa-mobile-alt text-warning me-2"></i>Don't lose your phone!</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

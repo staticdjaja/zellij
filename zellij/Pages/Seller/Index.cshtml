@@ -1,0 +1,199 @@
+@page
+@model zellij.Pages.Seller.IndexModel
+@using zellij.Models
+@{
+    ViewData["Title"] = "Seller Dashboard";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-tachometer-alt me-2"></i>Seller Dashboard</h1>
+            <div>
+                <span class="text-muted">Welcome, @User.Identity?.Name</span>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card text-center border-primary">
+                    <div class="card-body">
+                        <i class="fas fa-shopping-bag fa-2x text-primary mb-2"></i>
+                        <h4 class="text-primary">@Model.TotalOrders</h4>
+                        <small class="text-muted">Total Orders</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center border-warning">
+                    <div class="card-body">
+                        <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                        <h4 class="text-warning">@Model.PendingOrders</h4>
+                        <small class="text-muted">Pending</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center border-info">
+                    <div class="card-body">
+                        <i class="fas fa-cog fa-2x text-info mb-2"></i>
+                        <h4 class="text-info">@Model.ProcessingOrders</h4>
+                        <small class="text-muted">Processing</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center border-primary">
+                    <div class="card-body">
+                        <i class="fas fa-truck fa-2x text-primary mb-2"></i>
+                        <h4 class="text-primary">@Model.ShippedOrders</h4>
+                        <small class="text-muted">Shipped</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center border-success">
+                    <div class="card-body">
+                        <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                        <h4 class="text-success">@Model.DeliveredOrders</h4>
+                        <small class="text-muted">Delivered</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card text-center border-success">
+                    <div class="card-body">
+                        <i class="fas fa-dollar-sign fa-2x text-success mb-2"></i>
+                        <h4 class="text-success">$@Model.TotalRevenue.ToString("F0")</h4>
+                        <small class="text-muted">Revenue</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a asp-page="./Orders/Index" class="btn btn-primary w-100 mb-2">
+                                    <i class="fas fa-list me-2"></i>Manage All Orders
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a asp-page="./Orders/Index" asp-route-status="Pending" class="btn btn-warning w-100 mb-2">
+                                    <i class="fas fa-clock me-2"></i>Pending Orders
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a asp-page="./Orders/Index" asp-route-status="Processing" class="btn btn-info w-100 mb-2">
+                                    <i class="fas fa-cog me-2"></i>Processing Orders
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a asp-page="./Orders/Index" asp-route-status="Shipped" class="btn btn-primary w-100 mb-2">
+                                    <i class="fas fa-truck me-2"></i>Shipped Orders
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Orders</h5>
+                        <a asp-page="./Orders/Index" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View All
+                        </a>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (Model.RecentOrders.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Order #</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Total</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var order in Model.RecentOrders)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <strong>#@order.OrderNumber</strong>
+                                                </td>
+                                                <td>
+                                                    <div>
+                                                        <strong>@order.User.UserName</strong><br>
+                                                        <small class="text-muted">@order.User.Email</small>
+                                                    </div>
+                                                </td>
+                                                <td>@order.OrderDate.ToString("MMM dd, yyyy")</td>
+                                                <td>
+                                                    @{
+                                                        var statusInfo = GetStatusInfo(order.Status);
+                                                    }
+                                                    <span class="badge @statusInfo.BadgeClass">
+                                                        <i class="@statusInfo.Icon me-1"></i>@statusInfo.Text
+                                                    </span>
+                                                </td>
+                                                <td><strong>$@order.Total.ToString("F2")</strong></td>
+                                                <td>
+                                                    <a asp-page="./Orders/Details" asp-route-id="@order.Id" class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No orders yet</h5>
+                                <p class="text-muted">Orders will appear here when customers place them.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    private (string BadgeClass, string Icon, string Text) GetStatusInfo(Models.OrderStatus status)
+    {
+        return status switch
+        {
+            Models.OrderStatus.Pending => ("bg-warning text-dark", "fas fa-clock", "Pending"),
+            Models.OrderStatus.Confirmed => ("bg-info", "fas fa-check", "Confirmed"),
+            Models.OrderStatus.Processing => ("bg-primary", "fas fa-cog", "Processing"),
+            Models.OrderStatus.Shipped => ("bg-warning", "fas fa-truck", "Shipped"),
+            Models.OrderStatus.Delivered => ("bg-success", "fas fa-check-circle", "Delivered"),
+            Models.OrderStatus.Cancelled => ("bg-danger", "fas fa-times", "Cancelled"),
+            Models.OrderStatus.Refunded => ("bg-secondary", "fas fa-undo", "Refunded"),
+            _ => ("bg-secondary", "fas fa-question", "Unknown")
+        };
+    }
+}

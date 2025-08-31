@@ -1,0 +1,104 @@
+@page
+@model zellij.Pages.Account.Addresses.CreateModel
+@{
+    ViewData["Title"] = "Add New Address";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="mb-0"><i class="fas fa-plus me-2"></i>Add New Address</h1>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address.AddressName" class="form-label"></label>
+                            <input asp-for="Address.AddressName" class="form-control" placeholder="e.g., Home, Office, Warehouse" />
+                            <span asp-validation-for="Address.AddressName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address.Phone" class="form-label"></label>
+                            <input asp-for="Address.Phone" class="form-control" />
+                            <span asp-validation-for="Address.Phone" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Address.StreetAddress" class="form-label"></label>
+                        <input asp-for="Address.StreetAddress" class="form-control" placeholder="Street address, apartment, suite, etc." />
+                        <span asp-validation-for="Address.StreetAddress" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label asp-for="Address.AddressLine2" class="form-label"></label>
+                        <input asp-for="Address.AddressLine2" class="form-control" placeholder="Apartment, suite, unit, building, floor, etc. (optional)" />
+                        <span asp-validation-for="Address.AddressLine2" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address.City" class="form-label"></label>
+                            <input asp-for="Address.City" class="form-control" />
+                            <span asp-validation-for="Address.City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address.State" class="form-label"></label>
+                            <input asp-for="Address.State" class="form-control" placeholder="State/Province/Region" />
+                            <span asp-validation-for="Address.State" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address.PostalCode" class="form-label"></label>
+                            <input asp-for="Address.PostalCode" class="form-control" />
+                            <span asp-validation-for="Address.PostalCode" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Address.Country" class="form-label"></label>
+                            <select asp-for="Address.Country" class="form-select">
+                                <option value="">Select Country</option>
+                                <option value="Morocco">Morocco</option>
+                                <option value="United States">United States</option>
+                                <option value="Canada">Canada</option>
+                                <option value="United Kingdom">United Kingdom</option>
+                                <option value="France">France</option>
+                                <option value="Germany">Germany</option>
+                                <option value="Spain">Spain</option>
+                                <option value="Italy">Italy</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span asp-validation-for="Address.Country" class="text-danger"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input asp-for="Address.IsDefault" class="form-check-input" />
+                            <label asp-for="Address.IsDefault" class="form-check-label">
+                                Set as default address
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a asp-page="./Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Addresses
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>Save Address
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

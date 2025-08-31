@@ -1,0 +1,160 @@
+@page
+@model ShowRecoveryCodesModel
+@{
+    ViewData["Title"] = "Recovery codes";
+    ViewData["ActivePage"] = ManageNavPages.TwoFactorAuthentication;
+}
+
+<partial name="_StatusMessage" for="StatusMessage" />
+
+<div class="row">
+    <div class="col-md-8">
+        <h3><i class="fas fa-key me-2 text-warning"></i>@ViewData["Title"]</h3>
+        
+        <div class="alert alert-danger" role="alert">
+            <h5><i class="fas fa-exclamation-triangle me-2"></i>Important: Save These Recovery Codes</h5>
+            <p class="mb-2">
+                <strong>Put these codes in a safe place.</strong> If you lose your device and don't have the recovery codes, you will lose access to your account.
+            </p>
+            <p class="mb-0">
+                Each recovery code can only be used once. Print them out or save them in a secure password manager.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Your Recovery Codes</h5>
+            </div>
+            <div class="card-body bg-light">
+                <div class="row">
+                    @for (var row = 0; row < Model.RecoveryCodes!.Length; row += 2)
+                    {
+                        <div class="col-md-6 mb-3">
+                            <code class="recovery-code d-block">@Model.RecoveryCodes[row]</code>
+                            @if (row + 1 < Model.RecoveryCodes.Length)
+                            {
+                                <code class="recovery-code d-block mt-2">@Model.RecoveryCodes[row + 1]</code>
+                            }
+                        </div>
+                    }
+                </div>
+                
+                <div class="text-center mt-4">
+                    <button onclick="printRecoveryCodes()" class="btn btn-outline-primary me-2">
+                        <i class="fas fa-print me-1"></i>Print Codes
+                    </button>
+                    <button onclick="copyRecoveryCodes()" class="btn btn-outline-success">
+                        <i class="fas fa-copy me-1"></i>Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <a asp-page="./TwoFactorAuthentication" class="btn btn-primary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Two-Factor Authentication
+            </a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-info">
+            <div class="card-header bg-info text-white">
+                <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>How to Use Recovery Codes</h6>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li class="mb-2">If you lose access to your authenticator app</li>
+                    <li class="mb-2">Go to the login page</li>
+                    <li class="mb-2">Click "Use recovery code instead"</li>
+                    <li class="mb-2">Enter one of these codes</li>
+                    <li class="mb-0">Each code works only once</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card border-warning mt-3">
+            <div class="card-header bg-warning">
+                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Storage Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="fas fa-print text-primary me-2"></i>Print and store safely</li>
+                    <li class="mb-2"><i class="fas fa-lock text-success me-2"></i>Save in password manager</li>
+                    <li class="mb-2"><i class="fas fa-cloud text-info me-2"></i>Store in secure cloud storage</li>
+                    <li class="mb-0"><i class="fas fa-times text-danger me-2"></i>Don't save in plain text files</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function printRecoveryCodes() {
+            var codes = @Html.Raw(Json.Serialize(Model.RecoveryCodes));
+            var printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Recovery Codes - CESARO</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .codes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+                        .code { padding: 10px; background: #f8f9fa; border: 1px solid #dee2e6; font-family: monospace; font-size: 14px; }
+                        .warning { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin-top: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Two-Factor Authentication Recovery Codes</h1>
+                        <p>CESARO - Account: ${window.location.hostname}</p>
+                        <p>Generated: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <div class="codes">
+                        ${codes.map(code => `<div class="code">${code}</div>`).join('')}
+                    </div>
+                    <div class="warning">
+                        <strong>Important:</strong> Keep these codes safe and secure. Each code can only be used once.
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function copyRecoveryCodes() {
+            var codes = @Html.Raw(Json.Serialize(Model.RecoveryCodes));
+            var codeText = 'Two-Factor Authentication Recovery Codes\n';
+            codeText += 'CESARO\n';
+            codeText += 'Generated: ' + new Date().toLocaleDateString() + '\n\n';
+            codeText += codes.join('\n');
+            codeText += '\n\nIMPORTANT: Keep these codes safe and secure. Each code can only be used once.';
+            
+            navigator.clipboard.writeText(codeText).then(function() {
+                alert('Recovery codes copied to clipboard!');
+            }, function(err) {
+                console.error('Could not copy codes: ', err);
+                alert('Could not copy codes to clipboard. Please copy manually.');
+            });
+        }
+    </script>
+}
+
+<style>
+.recovery-code {
+    font-size: 1.2em;
+    margin: 0.25em 0;
+    padding: 0.75em;
+    background-color: white;
+    border: 2px solid #007bff;
+    border-radius: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    text-align: center;
+    color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
