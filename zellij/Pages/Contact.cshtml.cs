@@ -58,7 +58,7 @@ namespace zellij.Pages
                 _logger.LogError(ex, "Failed to send contact form email from {Email}", Contact.Email);
                 TempData["ErrorMessage"] = "There was an error sending your message. Please try again or contact us directly.";
             }
-            
+
             return RedirectToPage("./Contact");
         }
     }

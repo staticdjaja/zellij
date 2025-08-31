@@ -1,19 +1,28 @@
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using zellij.Models;
+using zellij.Repositories;
 
 namespace zellij.Services
 {
     public class OrderService : IOrderService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IProductRepository _productRepository;
+        private readonly IUserAddressRepository _userAddressRepository;
         private readonly ICartService _cartService;
         private readonly ICouponService _couponService;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService(ApplicationDbContext context, ICartService cartService, ICouponService couponService, ILogger<OrderService> logger)
+        public OrderService(
+            IOrderRepository orderRepository,
+            IProductRepository productRepository,
+            IUserAddressRepository userAddressRepository,
+            ICartService cartService,
+            ICouponService couponService,
+            ILogger<OrderService> logger)
         {
-            _context = context;
+            _orderRepository = orderRepository;
+            _productRepository = productRepository;
+            _userAddressRepository = userAddressRepository;
             _cartService = cartService;
             _couponService = couponService;
             _logger = logger;
@@ -21,8 +30,6 @@ namespace zellij.Services
 
         public async Task<Order?> CreateOrderAsync(string userId, int shippingAddressId, int? billingAddressId = null, string? couponCode = null, string? notes = null)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            
             try
             {
                 // Get cart items
@@ -34,9 +41,8 @@ namespace zellij.Services
                 }
 
                 // Verify addresses exist and belong to user
-                var shippingAddress = await _context.UserAddresses
-                    .FirstOrDefaultAsync(ua => ua.Id == shippingAddressId && ua.UserId == userId);
-                
+                var shippingAddress = await _userAddressRepository.GetUserAddressAsync(userId, shippingAddressId);
+
                 if (shippingAddress == null)
                 {
                     _logger.LogWarning("Invalid shipping address {AddressId} for user {UserId}", shippingAddressId, userId);
@@ -46,8 +52,7 @@ namespace zellij.Services
                 UserAddress? billingAddress = null;
                 if (billingAddressId.HasValue)
                 {
-                    billingAddress = await _context.UserAddresses
-                        .FirstOrDefaultAsync(ua => ua.Id == billingAddressId.Value && ua.UserId == userId);
+                    billingAddress = await _userAddressRepository.GetUserAddressAsync(userId, billingAddressId.Value);
                 }
 
                 // Calculate order totals
@@ -55,7 +60,7 @@ namespace zellij.Services
                 var tax = subTotal * 0.10m; // 10% tax
                 var shippingCost = subTotal >= 500 ? 0 : 25; // Free shipping over $500
                 var discountAmount = 0m;
-                
+
                 Coupon? appliedCoupon = null;
                 if (!string.IsNullOrEmpty(couponCode))
                 {
@@ -90,27 +95,22 @@ namespace zellij.Services
                     ShippingAddressId = shippingAddressId,
                     BillingAddressId = billingAddressId,
                     Notes = notes,
-                    OrderDate = DateTime.Now
+                    OrderDate = DateTime.Now,
+                    OrderItems = new List<OrderItem>()
                 };
 
-                _context.Orders.Add(order);
-                await _context.SaveChangesAsync();
-
-                // Create order items
+                // Create order items and verify stock
                 foreach (var cartItem in cartItems)
                 {
-                    // Verify stock availability
-                    var product = await _context.Products.FindAsync(cartItem.ProductId);
+                    var product = await _productRepository.GetByIdAsync(cartItem.ProductId);
                     if (product == null || product.StockQuantity < cartItem.Quantity)
                     {
                         _logger.LogWarning("Insufficient stock for product {ProductId} when creating order", cartItem.ProductId);
-                        await transaction.RollbackAsync();
                         return null;
                     }
 
                     var orderItem = new OrderItem
                     {
-                        OrderId = order.Id,
                         ProductId = cartItem.ProductId,
                         ProductName = cartItem.Product.Name,
                         Quantity = cartItem.Quantity,
@@ -120,30 +120,30 @@ namespace zellij.Services
                         ProductDescription = cartItem.Product.Description
                     };
 
-                    _context.OrderItems.Add(orderItem);
+                    order.OrderItems.Add(orderItem);
 
                     // Update product stock
                     product.StockQuantity -= cartItem.Quantity;
+                    await _productRepository.UpdateAsync(product);
                 }
+
+                // Add order to repository
+                var createdOrder = await _orderRepository.AddAsync(order);
 
                 // Apply coupon if valid
                 if (appliedCoupon != null && discountAmount > 0)
                 {
-                    await _couponService.ApplyCouponToOrderAsync(userId, couponCode!, order.Id, discountAmount);
+                    await _couponService.ApplyCouponToOrderAsync(userId, couponCode!, createdOrder.Id, discountAmount);
                 }
 
                 // Clear the cart
                 await _cartService.ClearCartAsync(userId);
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
                 _logger.LogInformation("Created order {OrderNumber} for user {UserId}", orderNumber, userId);
-                return order;
+                return createdOrder;
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync();
                 _logger.LogError(ex, "Error creating order for user {UserId}", userId);
                 return null;
             }
@@ -151,29 +151,29 @@ namespace zellij.Services
 
         public async Task<Order?> GetOrderAsync(int orderId, string userId)
         {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .Include(o => o.ShippingAddress)
-                .Include(o => o.BillingAddress)
-                .Include(o => o.Coupon)
-                .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+            return await _orderRepository.GetOrderWithDetailsAsync(orderId, userId);
+        }
+
+        public async Task<Order?> GetOrderByIdAsync(int orderId)
+        {
+            return await _orderRepository.GetOrderWithDetailsAsync(orderId);
         }
 
         public async Task<List<Order>> GetUserOrdersAsync(string userId)
         {
-            return await _context.Orders
-                .Include(o => o.OrderItems)
-                .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            return (await _orderRepository.GetUserOrdersAsync(userId)).ToList();
         }
 
         public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status)
         {
+            return await UpdateOrderStatusAsync(orderId, status, null);
+        }
+
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status, string? trackingNumber = null)
+        {
             try
             {
-                var order = await _context.Orders.FindAsync(orderId);
+                var order = await _orderRepository.GetByIdAsync(orderId);
                 if (order == null)
                 {
                     return false;
@@ -184,13 +184,17 @@ namespace zellij.Services
                 if (status == OrderStatus.Shipped && !order.ShippedDate.HasValue)
                 {
                     order.ShippedDate = DateTime.Now;
+                    if (!string.IsNullOrEmpty(trackingNumber))
+                    {
+                        order.TrackingNumber = trackingNumber;
+                    }
                 }
                 else if (status == OrderStatus.Delivered && !order.DeliveredDate.HasValue)
                 {
                     order.DeliveredDate = DateTime.Now;
                 }
 
-                await _context.SaveChangesAsync();
+                await _orderRepository.UpdateAsync(order);
                 _logger.LogInformation("Updated order {OrderId} status to {Status}", orderId, status);
                 return true;
             }
@@ -205,9 +209,7 @@ namespace zellij.Services
         {
             try
             {
-                var order = await _context.Orders
-                    .Include(o => o.OrderItems)
-                    .FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == userId);
+                var order = await _orderRepository.GetOrderWithDetailsAsync(orderId, userId);
 
                 if (order == null || order.Status != OrderStatus.Pending)
                 {
@@ -217,15 +219,16 @@ namespace zellij.Services
                 // Restore product stock
                 foreach (var orderItem in order.OrderItems)
                 {
-                    var product = await _context.Products.FindAsync(orderItem.ProductId);
+                    var product = await _productRepository.GetByIdAsync(orderItem.ProductId);
                     if (product != null)
                     {
                         product.StockQuantity += orderItem.Quantity;
+                        await _productRepository.UpdateAsync(product);
                     }
                 }
 
                 order.Status = OrderStatus.Cancelled;
-                await _context.SaveChangesAsync();
+                await _orderRepository.UpdateAsync(order);
 
                 _logger.LogInformation("Cancelled order {OrderId} for user {UserId}", orderId, userId);
                 return true;
@@ -240,10 +243,10 @@ namespace zellij.Services
         public async Task<string> GenerateOrderNumberAsync()
         {
             var date = DateTime.Now.ToString("yyyyMMdd");
-            var lastOrder = await _context.Orders
-                .Where(o => o.OrderNumber.StartsWith($"ZMM{date}"))
-                .OrderByDescending(o => o.OrderNumber)
-                .FirstOrDefaultAsync();
+            var orderNumberPrefix = $"ZMM{date}";
+
+            var existingOrders = await _orderRepository.FindAsync(o => o.OrderNumber.StartsWith(orderNumberPrefix));
+            var lastOrder = existingOrders.OrderByDescending(o => o.OrderNumber).FirstOrDefault();
 
             var sequence = 1;
             if (lastOrder != null)
@@ -256,6 +259,42 @@ namespace zellij.Services
             }
 
             return $"ZMM{date}{sequence:D4}";
+        }
+
+        // New methods from IOrderService interface
+        public async Task<IEnumerable<Order>> GetOrdersWithDetailsAsync()
+        {
+            return await _orderRepository.GetOrdersWithDetailsAsync();
+        }
+
+        public async Task<IEnumerable<Order>> GetRecentOrdersAsync(int count)
+        {
+            return await _orderRepository.GetRecentOrdersAsync(count);
+        }
+
+        public async Task<IEnumerable<Order>> GetOrdersByStatusAsync(OrderStatus status)
+        {
+            return await _orderRepository.GetOrdersByStatusAsync(status);
+        }
+
+        public async Task<int> GetOrderCountByStatusAsync(OrderStatus status)
+        {
+            return await _orderRepository.GetOrderCountByStatusAsync(status);
+        }
+
+        public async Task<decimal> GetTotalRevenueAsync()
+        {
+            return await _orderRepository.GetTotalRevenueAsync();
+        }
+
+        public async Task<decimal> GetRevenueByStatusAsync(OrderStatus status)
+        {
+            return await _orderRepository.GetRevenueByStatusAsync(status);
+        }
+
+        public async Task<IEnumerable<Order>> SearchOrdersAsync(string? searchString = null, OrderStatus? status = null)
+        {
+            return await _orderRepository.SearchOrdersAsync(searchString, status);
         }
     }
 }

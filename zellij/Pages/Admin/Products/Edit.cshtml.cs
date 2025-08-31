@@ -1,20 +1,19 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using zellij.Models;
-using Microsoft.AspNetCore.Authorization;
+using zellij.Services;
 
 namespace zellij.Pages.Admin.Products
 {
     [Authorize(Roles = "Admin")]
     public class EditModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
 
-        public EditModel(ApplicationDbContext context)
+        public EditModel(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         [BindProperty]
@@ -22,12 +21,12 @@ namespace zellij.Pages.Admin.Products
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
-            if (id == null || _context.Products == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var product = await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _productService.GetProductAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -43,32 +42,17 @@ namespace zellij.Pages.Admin.Products
                 return Page();
             }
 
-            Product.ModifiedDate = DateTime.Now;
-            _context.Attach(Product).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _productService.UpdateProductAsync(Product);
+                TempData["SuccessMessage"] = $"Product '{Product.Name}' has been updated successfully!";
+                return RedirectToPage("./Index");
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception)
             {
-                if (!ProductExists(Product.Id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                TempData["ErrorMessage"] = "An error occurred while updating the product.";
+                return Page();
             }
-
-            TempData["SuccessMessage"] = $"Product '{Product.Name}' has been updated successfully!";
-            return RedirectToPage("./Index");
-        }
-
-        private bool ProductExists(int id)
-        {
-            return (_context.Products?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

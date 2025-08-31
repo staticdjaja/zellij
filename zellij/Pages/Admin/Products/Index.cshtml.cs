@@ -1,20 +1,19 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using zellij.Models;
-using Microsoft.AspNetCore.Authorization;
+using zellij.Services;
 
 namespace zellij.Pages.Admin.Products
 {
     [Authorize(Roles = "Admin")]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         public IList<Product> Products { get; set; } = default!;
@@ -24,20 +23,14 @@ namespace zellij.Pages.Admin.Products
 
         public async Task OnGetAsync()
         {
-            IQueryable<Product> productsQuery = _context.Products;
-
             if (!string.IsNullOrEmpty(SearchString))
             {
-                productsQuery = productsQuery.Where(p => 
-                    p.Name.Contains(SearchString) || 
-                    p.MarbleType.Contains(SearchString) || 
-                    p.Origin.Contains(SearchString) ||
-                    p.Color.Contains(SearchString));
+                Products = (await _productService.SearchProductsAsync(SearchString, null, null, null, null)).ToList();
             }
-
-            Products = await productsQuery
-                .OrderBy(p => p.Name)
-                .ToListAsync();
+            else
+            {
+                Products = (await _productService.GetAllProductsAsync()).OrderBy(p => p.Name).ToList();
+            }
         }
     }
 }
