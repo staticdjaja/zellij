@@ -67,7 +67,7 @@ namespace zellij.Repositories
 
             product.StockQuantity = quantity;
             product.InStock = quantity > 0;
-            product.ModifiedDate = DateTime.Now;
+            product.ModifiedDate = DateTime.UtcNow;
 
             await UpdateAsync(product);
             return true;

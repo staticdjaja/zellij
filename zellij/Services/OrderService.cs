@@ -95,7 +95,7 @@ namespace zellij.Services
                     ShippingAddressId = shippingAddressId,
                     BillingAddressId = billingAddressId,
                     Notes = notes,
-                    OrderDate = DateTime.Now,
+                    OrderDate = DateTime.UtcNow,
                     OrderItems = new List<OrderItem>()
                 };
 
@@ -164,11 +164,6 @@ namespace zellij.Services
             return (await _orderRepository.GetUserOrdersAsync(userId)).ToList();
         }
 
-        public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status)
-        {
-            return await UpdateOrderStatusAsync(orderId, status, null);
-        }
-
         public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status, string? trackingNumber = null)
         {
             try
@@ -203,6 +198,10 @@ namespace zellij.Services
                 _logger.LogError(ex, "Error updating order {OrderId} status", orderId);
                 return false;
             }
+        }
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, OrderStatus status)
+        {
+            return await UpdateOrderStatusAsync(orderId, status, null);
         }
 
         public async Task<bool> CancelOrderAsync(int orderId, string userId)
