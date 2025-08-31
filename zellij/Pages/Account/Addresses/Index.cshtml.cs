@@ -39,20 +39,18 @@ namespace zellij.Pages.Account.Addresses
         public async Task<IActionResult> OnPostSetDefaultAsync(int addressId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
-            // Remove default from all addresses
-            var userAddresses = await _context.UserAddresses
-                .Where(ua => ua.UserId == userId)
-                .ToListAsync();
 
-            foreach (var address in userAddresses)
-            {
-                address.IsDefault = address.Id == addressId;
-            }
+            // Set IsDefault = false for all addresses of the user (single DB call)
+            await _context.UserAddresses
+                .Where(ua => ua.UserId == userId && ua.IsDefault)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(ua => ua.IsDefault, false));
 
-            await _context.SaveChangesAsync();
+            // Set IsDefault = true for the selected address (single DB call)
+            await _context.UserAddresses
+                .Where(ua => ua.UserId == userId && ua.Id == addressId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(ua => ua.IsDefault, true));
+
             TempData["SuccessMessage"] = "Default address updated successfully.";
-
             return RedirectToPage();
         }
 
