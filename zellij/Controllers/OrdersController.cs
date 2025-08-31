@@ -29,10 +29,10 @@ namespace zellij.Controllers
             var success = await _orderService.CancelOrderAsync(id, userId);
             if (success)
             {
-                return Ok(new { success = true, message = "Order cancelled successfully" });
+                return Ok(new { success = true, message = "Order cancelled successfully." });
             }
 
-            return BadRequest(new { success = false, message = "Unable to cancel order" });
+            return BadRequest(new { success = false, message = "Unable to cancel order." });
         }
     }
 }
