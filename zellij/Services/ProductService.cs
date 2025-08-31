@@ -34,13 +34,13 @@ namespace zellij.Services
 
         public async Task<Product> CreateProductAsync(Product product)
         {
-            product.CreatedDate = DateTime.Now;
+            product.CreatedDate = DateTime.UtcNow;
             return await _productRepository.AddAsync(product);
         }
 
         public async Task<Product> UpdateProductAsync(Product product)
         {
-            product.ModifiedDate = DateTime.Now;
+            product.ModifiedDate = DateTime.UtcNow;
             return await _productRepository.UpdateAsync(product);
         }
 

@@ -29,7 +29,7 @@ namespace zellij.Services
 
         public async Task<UserAddress> CreateAddressAsync(UserAddress address)
         {
-            address.CreatedDate = DateTime.Now;
+            address.CreatedDate = DateTime.UtcNow;
 
             // Check if this should be the default address (if no other addresses exist)
             var existingAddresses = await _userAddressRepository.GetUserAddressesAsync(address.UserId);
