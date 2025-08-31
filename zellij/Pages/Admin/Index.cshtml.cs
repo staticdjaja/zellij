@@ -1,21 +1,17 @@
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using zellij.Services;
 
 namespace zellij.Pages.Admin
 {
     [Authorize(Roles = "Admin")]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly IAdminService _adminService;
 
-        public IndexModel(ApplicationDbContext context, UserManager<IdentityUser> userManager)
+        public IndexModel(IAdminService adminService)
         {
-            _context = context;
-            _userManager = userManager;
+            _adminService = adminService;
         }
 
         public int ProductCount { get; set; }
@@ -25,10 +21,12 @@ namespace zellij.Pages.Admin
 
         public async Task OnGetAsync()
         {
-            ProductCount = await _context.Products.CountAsync();
-            UserCount = _userManager.Users.Count();
-            InStockProducts = await _context.Products.CountAsync(p => p.InStock && p.StockQuantity > 0);
-            OutOfStockProducts = await _context.Products.CountAsync(p => !p.InStock || p.StockQuantity == 0);
+            var dashboardData = await _adminService.GetDashboardDataAsync();
+
+            ProductCount = dashboardData.ProductCount;
+            UserCount = dashboardData.UserCount;
+            InStockProducts = dashboardData.InStockProducts;
+            OutOfStockProducts = dashboardData.OutOfStockProducts;
         }
     }
 }

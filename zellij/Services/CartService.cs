@@ -42,7 +42,7 @@ namespace zellij.Services
                 }
 
                 var existingCartItem = await GetCartItemAsync(userId, productId);
-                
+
                 if (existingCartItem != null)
                 {
                     // Update existing cart item
@@ -51,7 +51,7 @@ namespace zellij.Services
                     {
                         return false;
                     }
-                    
+
                     existingCartItem.Quantity = newQuantity;
                     existingCartItem.AddedDate = DateTime.Now;
                 }
@@ -66,7 +66,7 @@ namespace zellij.Services
                         PriceAtTimeOfAdd = product.Price,
                         AddedDate = DateTime.Now
                     };
-                    
+
                     _context.CartItems.Add(cartItem);
                 }
 
@@ -104,7 +104,7 @@ namespace zellij.Services
 
                 cartItem.Quantity = quantity;
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation("Updated cart item quantity to {Quantity} for product {ProductId} and user {UserId}", quantity, productId, userId);
                 return true;
             }
@@ -121,7 +121,7 @@ namespace zellij.Services
             {
                 var cartItem = await _context.CartItems
                     .FirstOrDefaultAsync(ci => ci.UserId == userId && ci.ProductId == productId);
-                
+
                 if (cartItem == null)
                 {
                     return false;
@@ -129,7 +129,7 @@ namespace zellij.Services
 
                 _context.CartItems.Remove(cartItem);
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation("Removed product {ProductId} from cart for user {UserId}", productId, userId);
                 return true;
             }
@@ -150,7 +150,7 @@ namespace zellij.Services
 
                 _context.CartItems.RemoveRange(cartItems);
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation("Cleared cart for user {UserId}", userId);
                 return true;
             }
@@ -179,15 +179,15 @@ namespace zellij.Services
         {
             var cartItems = await GetCartItemsAsync(userId);
             var subTotal = cartItems.Sum(ci => ci.Total);
-            
+
             // Calculate tax (example: 10% tax rate)
             var tax = subTotal * 0.10m;
-            
+
             // Calculate shipping (example: free shipping over $500, otherwise $25)
             var shippingCost = subTotal >= 500 ? 0 : 25;
-            
+
             var total = subTotal + tax + shippingCost;
-            
+
             return new CartSummary
             {
                 Items = cartItems,

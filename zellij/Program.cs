@@ -1,9 +1,10 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using zellij.Data;
-using zellij.Services;
 using zellij.Models;
-using Microsoft.AspNetCore.Identity.UI.Services;
+using zellij.Repositories;
+using zellij.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,7 +26,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => 
+builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false; // Allow sign in without email confirmation
     options.Password.RequireDigit = true;
@@ -33,18 +34,23 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = true;
     options.Password.RequiredLength = 6;
-    
+
     // Configure lockout settings for better security
     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     options.Lockout.MaxFailedAccessAttempts = 5;
     options.Lockout.AllowedForNewUsers = true;
-    
+
     // Enable 2FA token providers
     options.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+// Register repositories
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IUserAddressRepository, UserAddressRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 
 // Register services
 builder.Services.AddSingleton<IQrCodeService, QrCodeService>();
@@ -53,6 +59,9 @@ builder.Services.AddScoped<IEmailSender, EmailService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<ICouponService, CouponService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IUserAddressService, UserAddressService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Add controllers for API endpoints
 builder.Services.AddControllers();
@@ -110,19 +119,19 @@ using (var scope = app.Services.CreateScope())
     {
         var userManager = services.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        
+
         // Create Admin role if it doesn't exist
         if (!await roleManager.RoleExistsAsync("Admin"))
         {
             await roleManager.CreateAsync(new IdentityRole("Admin"));
         }
-        
+
         // Create Seller role if it doesn't exist
         if (!await roleManager.RoleExistsAsync("Seller"))
         {
             await roleManager.CreateAsync(new IdentityRole("Seller"));
         }
-        
+
         // Create admin user if it doesn't exist
         var adminUser = await userManager.FindByNameAsync("admin");
         if (adminUser == null)
@@ -133,14 +142,14 @@ using (var scope = app.Services.CreateScope())
                 Email = "admin@zellijmarble.ma",
                 EmailConfirmed = true
             };
-            
+
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
                 await userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
-        
+
         // Create seller user if it doesn't exist
         var sellerUser = await userManager.FindByNameAsync("seller");
         if (sellerUser == null)
@@ -151,7 +160,7 @@ using (var scope = app.Services.CreateScope())
                 Email = "seller@zellijmarble.ma",
                 EmailConfirmed = true
             };
-            
+
             var result = await userManager.CreateAsync(sellerUser, "Seller123!");
             if (result.Succeeded)
             {

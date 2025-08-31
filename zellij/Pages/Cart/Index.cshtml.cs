@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using zellij.Services;
-using zellij.Models;
 using System.Security.Claims;
+using zellij.Services;
 
 namespace zellij.Pages.Cart
 {
@@ -20,10 +19,10 @@ namespace zellij.Pages.Cart
         }
 
         public CartSummary CartSummary { get; set; } = new();
-        
+
         [BindProperty]
         public string CouponCode { get; set; } = string.Empty;
-        
+
         public string? CouponMessage { get; set; }
         public bool CouponApplied { get; set; }
 
@@ -37,7 +36,7 @@ namespace zellij.Pages.Cart
         public async Task<IActionResult> OnPostUpdateQuantityAsync(int productId, int quantity)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
+
             if (quantity <= 0)
             {
                 await _cartService.RemoveFromCartAsync(userId, productId);
@@ -62,7 +61,7 @@ namespace zellij.Pages.Cart
         public async Task<IActionResult> OnPostRemoveItemAsync(int productId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
+
             var success = await _cartService.RemoveFromCartAsync(userId, productId);
             if (success)
             {
@@ -79,7 +78,7 @@ namespace zellij.Pages.Cart
         public async Task<IActionResult> OnPostApplyCouponAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
+
             if (string.IsNullOrWhiteSpace(CouponCode))
             {
                 TempData["ErrorMessage"] = "Please enter a coupon code.";
@@ -124,7 +123,7 @@ namespace zellij.Pages.Cart
         public async Task<IActionResult> OnPostClearCartAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
+
             var success = await _cartService.ClearCartAsync(userId);
             if (success)
             {

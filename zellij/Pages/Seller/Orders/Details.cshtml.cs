@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using zellij.Models;
+using zellij.Services;
 
 namespace zellij.Pages.Seller.Orders
 {
     [Authorize(Roles = "Admin,Seller")]
     public class DetailsModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IOrderService _orderService;
 
-        public DetailsModel(ApplicationDbContext context)
+        public DetailsModel(IOrderService orderService)
         {
-            _context = context;
+            _orderService = orderService;
         }
 
         public Order Order { get; set; } = default!;
@@ -35,14 +34,7 @@ namespace zellij.Pages.Seller.Orders
                 return NotFound();
             }
 
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(oi => oi.Product)
-                .Include(o => o.ShippingAddress)
-                .Include(o => o.BillingAddress)
-                .Include(o => o.Coupon)
-                .Include(o => o.User)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var order = await _orderService.GetOrderByIdAsync(id.Value);
 
             if (order == null)
             {
@@ -57,33 +49,25 @@ namespace zellij.Pages.Seller.Orders
 
         public async Task<IActionResult> OnPostUpdateStatusAsync(int id)
         {
-            var order = await _context.Orders.FindAsync(id);
-            if (order == null)
+            var success = await _orderService.UpdateOrderStatusAsync(id, NewStatus, TrackingNumber);
+
+            if (success)
             {
-                return NotFound();
+                var order = await _orderService.GetOrderByIdAsync(id);
+                if (order != null)
+                {
+                    TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {NewStatus}.";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Order status updated successfully.";
+                }
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Order not found or could not be updated.";
             }
 
-            var oldStatus = order.Status;
-            order.Status = NewStatus;
-
-            // Update timestamps based on status
-            switch (NewStatus)
-            {
-                case OrderStatus.Shipped when !order.ShippedDate.HasValue:
-                    order.ShippedDate = DateTime.Now;
-                    if (!string.IsNullOrEmpty(TrackingNumber))
-                    {
-                        order.TrackingNumber = TrackingNumber;
-                    }
-                    break;
-                case OrderStatus.Delivered when !order.DeliveredDate.HasValue:
-                    order.DeliveredDate = DateTime.Now;
-                    break;
-            }
-
-            await _context.SaveChangesAsync();
-            
-            TempData["SuccessMessage"] = $"Order status updated from {oldStatus} to {NewStatus}.";
             return RedirectToPage(new { id });
         }
     }

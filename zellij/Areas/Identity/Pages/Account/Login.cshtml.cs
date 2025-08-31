@@ -84,8 +84,8 @@ namespace zellij.Areas.Identity.Pages.Account
                 {
                     var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
                     var timeRemaining = lockoutEnd?.Subtract(DateTimeOffset.Now).TotalMinutes ?? 0;
-                    
-                    ModelState.AddModelError(string.Empty, 
+
+                    ModelState.AddModelError(string.Empty,
                         $"Your account has been locked due to multiple failed login attempts. Please try again in {Math.Ceiling(timeRemaining)} minutes.");
                     _logger.LogWarning("User {Email} attempted to login while locked out.", Input.Email);
                     return Page();
@@ -94,7 +94,7 @@ namespace zellij.Areas.Identity.Pages.Account
                 // Check if email is confirmed (if required by your app settings)
                 if (!user.EmailConfirmed && _signInManager.Options.SignIn.RequireConfirmedAccount)
                 {
-                    ModelState.AddModelError(string.Empty, 
+                    ModelState.AddModelError(string.Empty,
                         "Please confirm your email address before signing in. Check your email for a confirmation link.");
                     return Page();
                 }
@@ -117,8 +117,8 @@ namespace zellij.Areas.Identity.Pages.Account
                 {
                     var lockoutEnd = await _userManager.GetLockoutEndDateAsync(user);
                     var timeRemaining = lockoutEnd?.Subtract(DateTimeOffset.Now).TotalMinutes ?? 0;
-                    
-                    ModelState.AddModelError(string.Empty, 
+
+                    ModelState.AddModelError(string.Empty,
                         $"Your account has been locked due to multiple failed login attempts. Please try again in {Math.Ceiling(timeRemaining)} minutes or contact support.");
                     _logger.LogWarning("User {Email} account locked out.", Input.Email);
                     return Page();
@@ -128,12 +128,12 @@ namespace zellij.Areas.Identity.Pages.Account
                 {
                     if (!user.EmailConfirmed)
                     {
-                        ModelState.AddModelError(string.Empty, 
+                        ModelState.AddModelError(string.Empty,
                             "Please confirm your email address before signing in. Check your email for a confirmation link or request a new one.");
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, 
+                        ModelState.AddModelError(string.Empty,
                             "Your account is not allowed to sign in. Please contact support for assistance.");
                     }
                     return Page();
@@ -146,21 +146,21 @@ namespace zellij.Areas.Identity.Pages.Account
 
                 if (attemptsRemaining > 1)
                 {
-                    ModelState.AddModelError(string.Empty, 
+                    ModelState.AddModelError(string.Empty,
                         $"Incorrect password. You have {attemptsRemaining} attempts remaining before your account is temporarily locked.");
                 }
                 else if (attemptsRemaining == 1)
                 {
-                    ModelState.AddModelError(string.Empty, 
+                    ModelState.AddModelError(string.Empty,
                         "Incorrect password. Warning: This is your last attempt before your account is temporarily locked for security.");
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, 
+                    ModelState.AddModelError(string.Empty,
                         "Incorrect password. Your account will be temporarily locked for security.");
                 }
 
-                _logger.LogWarning("Failed login attempt for user {Email}. Attempts remaining: {AttemptsRemaining}", 
+                _logger.LogWarning("Failed login attempt for user {Email}. Attempts remaining: {AttemptsRemaining}",
                     Input.Email, attemptsRemaining);
             }
 

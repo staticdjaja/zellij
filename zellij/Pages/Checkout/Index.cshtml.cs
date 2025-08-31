@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using zellij.Data;
 using zellij.Models;
 using zellij.Services;
 
@@ -12,21 +10,21 @@ namespace zellij.Pages.Checkout
     [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
         private readonly ICartService _cartService;
         private readonly ICouponService _couponService;
         private readonly IOrderService _orderService;
+        private readonly IUserAddressService _userAddressService;
 
         public IndexModel(
-            ApplicationDbContext context,
             ICartService cartService,
             ICouponService couponService,
-            IOrderService orderService)
+            IOrderService orderService,
+            IUserAddressService userAddressService)
         {
-            _context = context;
             _cartService = cartService;
             _couponService = couponService;
             _orderService = orderService;
+            _userAddressService = userAddressService;
         }
 
         public CartSummary CartSummary { get; set; } = new();
@@ -44,7 +42,7 @@ namespace zellij.Pages.Checkout
 
             // Get cart summary
             CartSummary = await _cartService.GetCartSummaryAsync(userId);
-            
+
             if (!CartSummary.Items.Any())
             {
                 TempData["ErrorMessage"] = "Your cart is empty. Please add items before checkout.";
@@ -52,11 +50,7 @@ namespace zellij.Pages.Checkout
             }
 
             // Get user addresses
-            UserAddresses = await _context.UserAddresses
-                .Where(ua => ua.UserId == userId)
-                .OrderByDescending(ua => ua.IsDefault)
-                .ThenBy(ua => ua.AddressName)
-                .ToListAsync();
+            UserAddresses = (await _userAddressService.GetUserAddressesAsync(userId)).ToList();
 
             if (!UserAddresses.Any())
             {
@@ -64,7 +58,7 @@ namespace zellij.Pages.Checkout
                 return RedirectToPage("/Account/Addresses/Create");
             }
 
-            DefaultAddress = UserAddresses.FirstOrDefault(a => a.IsDefault);
+            DefaultAddress = await _userAddressService.GetDefaultAddressAsync(userId);
             Form.ShippingAddressId = DefaultAddress?.Id ?? UserAddresses.First().Id;
 
             // Check for applied coupon in session
@@ -96,8 +90,7 @@ namespace zellij.Pages.Checkout
             }
 
             // Verify the selected address belongs to the user
-            var selectedAddress = await _context.UserAddresses
-                .FirstOrDefaultAsync(ua => ua.Id == Form.ShippingAddressId && ua.UserId == userId);
+            var selectedAddress = await _userAddressService.GetUserAddressAsync(userId, Form.ShippingAddressId);
 
             if (selectedAddress == null)
             {
@@ -132,11 +125,7 @@ namespace zellij.Pages.Checkout
         private async Task LoadPageDataAsync(string userId)
         {
             CartSummary = await _cartService.GetCartSummaryAsync(userId);
-            UserAddresses = await _context.UserAddresses
-                .Where(ua => ua.UserId == userId)
-                .OrderByDescending(ua => ua.IsDefault)
-                .ThenBy(ua => ua.AddressName)
-                .ToListAsync();
+            UserAddresses = (await _userAddressService.GetUserAddressesAsync(userId)).ToList();
         }
     }
 
