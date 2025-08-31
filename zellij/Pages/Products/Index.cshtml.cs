@@ -1,17 +1,16 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using zellij.Models;
+using zellij.Services;
 
 namespace zellij.Pages.Products
 {
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         public IList<Product> Products { get; set; } = default!;
@@ -29,37 +28,7 @@ namespace zellij.Pages.Products
             MinPrice = minPrice;
             MaxPrice = maxPrice;
 
-            var query = _context.Products.AsQueryable();
-
-            // Apply filters
-            if (!string.IsNullOrEmpty(searchTerm))
-            {
-                query = query.Where(p => p.Name.Contains(searchTerm) || 
-                                        p.Description.Contains(searchTerm) || 
-                                        p.MarbleType.Contains(searchTerm));
-            }
-
-            if (!string.IsNullOrEmpty(origin))
-            {
-                query = query.Where(p => p.Origin == origin);
-            }
-
-            if (!string.IsNullOrEmpty(color))
-            {
-                query = query.Where(p => p.Color == color);
-            }
-
-            if (minPrice.HasValue)
-            {
-                query = query.Where(p => p.Price >= minPrice);
-            }
-
-            if (maxPrice.HasValue)
-            {
-                query = query.Where(p => p.Price <= maxPrice);
-            }
-
-            Products = await query.Where(p => p.InStock).ToListAsync();
+            Products = (await _productService.SearchProductsAsync(searchTerm, origin, color, minPrice, maxPrice)).ToList();
         }
     }
 }

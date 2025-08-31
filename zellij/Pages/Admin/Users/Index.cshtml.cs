@@ -27,8 +27,8 @@ namespace zellij.Pages.Admin.Users
 
             if (!string.IsNullOrEmpty(SearchString))
             {
-                usersQuery = usersQuery.Where(u => 
-                    u.UserName!.Contains(SearchString) || 
+                usersQuery = usersQuery.Where(u =>
+                    u.UserName!.Contains(SearchString) ||
                     u.Email!.Contains(SearchString) ||
                     (u.PhoneNumber != null && u.PhoneNumber.Contains(SearchString)));
             }

@@ -1,19 +1,19 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using zellij.Data;
 using zellij.Models;
-using Microsoft.AspNetCore.Authorization;
+using zellij.Services;
 
 namespace zellij.Pages.Admin.Products
 {
     [Authorize(Roles = "Admin")]
     public class CreateModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
 
-        public CreateModel(ApplicationDbContext context)
+        public CreateModel(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         public IActionResult OnGet()
@@ -26,14 +26,12 @@ namespace zellij.Pages.Admin.Products
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid || _context.Products == null || Product == null)
+            if (!ModelState.IsValid || Product == null)
             {
                 return Page();
             }
 
-            Product.CreatedDate = DateTime.Now;
-            _context.Products.Add(Product);
-            await _context.SaveChangesAsync();
+            await _productService.CreateProductAsync(Product);
 
             TempData["SuccessMessage"] = $"Product '{Product.Name}' has been created successfully!";
             return RedirectToPage("./Index");

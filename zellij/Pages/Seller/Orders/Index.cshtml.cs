@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
 using zellij.Models;
+using zellij.Services;
 
 namespace zellij.Pages.Seller.Orders
 {
     [Authorize(Roles = "Admin,Seller")]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IOrderService _orderService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IOrderService orderService)
         {
-            _context = context;
+            _orderService = orderService;
         }
 
         public List<Order> Orders { get; set; } = new();
@@ -31,63 +30,37 @@ namespace zellij.Pages.Seller.Orders
         public async Task OnGetAsync(string? searchString, string? status)
         {
             SearchString = searchString;
-            
+
             if (Enum.TryParse<OrderStatus>(status, out var statusEnum))
             {
                 StatusFilter = statusEnum;
                 CurrentFilter = status;
             }
 
-            var ordersQuery = _context.Orders
-                .Include(o => o.User)
-                .Include(o => o.ShippingAddress)
-                .Include(o => o.OrderItems)
-                .AsQueryable();
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                ordersQuery = ordersQuery.Where(o => 
-                    o.OrderNumber.Contains(searchString) ||
-                    o.User.UserName!.Contains(searchString) ||
-                    o.User.Email!.Contains(searchString));
-            }
-
-            if (StatusFilter.HasValue)
-            {
-                ordersQuery = ordersQuery.Where(o => o.Status == StatusFilter.Value);
-            }
-
-            Orders = await ordersQuery
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
+            Orders = (await _orderService.SearchOrdersAsync(searchString, StatusFilter)).ToList();
         }
 
         public async Task<IActionResult> OnPostUpdateStatusAsync()
         {
-            var order = await _context.Orders.FindAsync(OrderId);
-            if (order == null)
+            var success = await _orderService.UpdateOrderStatusAsync(OrderId, NewStatus);
+
+            if (success)
             {
-                TempData["ErrorMessage"] = "Order not found.";
-                return RedirectToPage();
+                var order = await _orderService.GetOrderByIdAsync(OrderId);
+                if (order != null)
+                {
+                    TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated to {NewStatus}.";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Order status updated successfully.";
+                }
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Order not found or could not be updated.";
             }
 
-            var oldStatus = order.Status;
-            order.Status = NewStatus;
-
-            // Update timestamps based on status
-            switch (NewStatus)
-            {
-                case OrderStatus.Shipped when !order.ShippedDate.HasValue:
-                    order.ShippedDate = DateTime.Now;
-                    break;
-                case OrderStatus.Delivered when !order.DeliveredDate.HasValue:
-                    order.DeliveredDate = DateTime.Now;
-                    break;
-            }
-
-            await _context.SaveChangesAsync();
-            
-            TempData["SuccessMessage"] = $"Order #{order.OrderNumber} status updated from {oldStatus} to {NewStatus}.";
             return RedirectToPage();
         }
     }

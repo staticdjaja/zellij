@@ -1,21 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using zellij.Data;
+using System.Security.Claims;
 using zellij.Models;
 using zellij.Services;
-using System.Security.Claims;
 
 namespace zellij.Pages.Products
 {
     public class DetailsModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IProductService _productService;
         private readonly ICartService _cartService;
 
-        public DetailsModel(ApplicationDbContext context, ICartService cartService)
+        public DetailsModel(IProductService productService, ICartService cartService)
         {
-            _context = context;
+            _productService = productService;
             _cartService = cartService;
         }
 
@@ -31,7 +29,7 @@ namespace zellij.Pages.Products
                 return NotFound();
             }
 
-            var product = await _context.Products.FirstOrDefaultAsync(m => m.Id == id);
+            var product = await _productService.GetProductAsync(id.Value);
             if (product == null)
             {
                 return NotFound();

@@ -2,19 +2,19 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Security.Claims;
-using zellij.Data;
 using zellij.Models;
+using zellij.Services;
 
 namespace zellij.Pages.Account.Addresses
 {
     [Authorize]
     public class CreateModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUserAddressService _userAddressService;
 
-        public CreateModel(ApplicationDbContext context)
+        public CreateModel(IUserAddressService userAddressService)
         {
-            _context = context;
+            _userAddressService = userAddressService;
         }
 
         [BindProperty]
@@ -34,17 +34,8 @@ namespace zellij.Pages.Account.Addresses
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
             Address.UserId = userId;
-            Address.CreatedDate = DateTime.Now;
 
-            // Check if this should be the default address (if no other addresses exist)
-            var existingAddresses = _context.UserAddresses.Where(ua => ua.UserId == userId).Any();
-            if (!existingAddresses)
-            {
-                Address.IsDefault = true;
-            }
-
-            _context.UserAddresses.Add(Address);
-            await _context.SaveChangesAsync();
+            await _userAddressService.CreateAddressAsync(Address);
 
             TempData["SuccessMessage"] = "Address added successfully!";
             return RedirectToPage("./Index");
