@@ -1,21 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using zellij.Data;
 using zellij.Models;
+using zellij.Services;
 
 namespace zellij.Pages.Account.Addresses
 {
     [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IUserAddressService _userAddressService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IUserAddressService userAddressService)
         {
-            _context = context;
+            _userAddressService = userAddressService;
         }
 
         public List<UserAddress> Addresses { get; set; } = new();
@@ -24,13 +23,8 @@ namespace zellij.Pages.Account.Addresses
         public async Task<IActionResult> OnGetAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
-            Addresses = await _context.UserAddresses
-                .Where(ua => ua.UserId == userId)
-                .OrderByDescending(ua => ua.IsDefault)
-                .ThenByDescending(ua => ua.CreatedDate)
-                .ToListAsync();
 
+            Addresses = (await _userAddressService.GetUserAddressesAsync(userId)).ToList();
             HasDefaultAddress = Addresses.Any(a => a.IsDefault);
 
             return Page();
@@ -39,48 +33,41 @@ namespace zellij.Pages.Account.Addresses
         public async Task<IActionResult> OnPostSetDefaultAsync(int addressId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var success = await _userAddressService.SetDefaultAddressAsync(userId, addressId);
 
-            // Set IsDefault = false for all addresses of the user (single DB call)
-            await _context.UserAddresses
-                .Where(ua => ua.UserId == userId && ua.IsDefault)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(ua => ua.IsDefault, false));
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Default address updated successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Unable to update default address.";
+            }
 
-            // Set IsDefault = true for the selected address (single DB call)
-            await _context.UserAddresses
-                .Where(ua => ua.UserId == userId && ua.Id == addressId)
-                .ExecuteUpdateAsync(setters => setters.SetProperty(ua => ua.IsDefault, true));
-
-            TempData["SuccessMessage"] = "Default address updated successfully.";
             return RedirectToPage();
         }
 
         public async Task<IActionResult> OnPostDeleteAsync(int addressId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-            
-            var address = await _context.UserAddresses
-                .FirstOrDefaultAsync(ua => ua.Id == addressId && ua.UserId == userId);
-
-            if (address == null)
-            {
-                TempData["ErrorMessage"] = "Address not found.";
-                return RedirectToPage();
-            }
 
             // Check if this address is used in any orders
-            var hasOrders = await _context.Orders
-                .AnyAsync(o => o.ShippingAddressId == addressId || o.BillingAddressId == addressId);
-
-            if (hasOrders)
+            if (await _userAddressService.IsAddressUsedInOrdersAsync(addressId))
             {
                 TempData["ErrorMessage"] = "Cannot delete address as it's associated with existing orders.";
                 return RedirectToPage();
             }
 
-            _context.UserAddresses.Remove(address);
-            await _context.SaveChangesAsync();
+            var success = await _userAddressService.DeleteAddressAsync(userId, addressId);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Address deleted successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Address not found.";
+            }
 
-            TempData["SuccessMessage"] = "Address deleted successfully.";
             return RedirectToPage();
         }
     }

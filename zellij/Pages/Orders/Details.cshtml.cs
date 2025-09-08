@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using zellij.Data;
 using zellij.Models;
 using zellij.Services;
 
@@ -12,12 +10,10 @@ namespace zellij.Pages.Orders
     [Authorize]
     public class DetailsModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
         private readonly IOrderService _orderService;
 
-        public DetailsModel(ApplicationDbContext context, IOrderService orderService)
+        public DetailsModel(IOrderService orderService)
         {
-            _context = context;
             _orderService = orderService;
         }
 

@@ -1,21 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using zellij.Data;
 using zellij.Models;
+using zellij.Services;
 
 namespace zellij.Pages.Orders
 {
     [Authorize]
     public class IndexModel : PageModel
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IOrderService _orderService;
 
-        public IndexModel(ApplicationDbContext context)
+        public IndexModel(IOrderService orderService)
         {
-            _context = context;
+            _orderService = orderService;
         }
 
         public List<Order> Orders { get; set; } = new();
@@ -23,15 +22,7 @@ namespace zellij.Pages.Orders
         public async Task<IActionResult> OnGetAsync()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
-
-            Orders = await _context.Orders
-                .Include(o => o.OrderItems)
-                .Include(o => o.ShippingAddress)
-                .Include(o => o.Coupon)
-                .Where(o => o.UserId == userId)
-                .OrderByDescending(o => o.OrderDate)
-                .ToListAsync();
-
+            Orders = (await _orderService.GetUserOrdersAsync(userId)).ToList();
             return Page();
         }
     }

@@ -89,7 +89,7 @@ namespace zellij.Services
                 coupon.TimesUsed++;
 
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation("Applied coupon {CouponCode} to order {OrderId} for user {UserId}", couponCode, orderId, userId);
                 return true;
             }
